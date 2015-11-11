@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u;
+package com.cmg5461.jb4u.ui;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -7,7 +7,7 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,12 +16,13 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
 import com.cmg5461.jb4u.providers.JB4Connection;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
 
 
-public class JB4UActivity extends ActionBarActivity {
+public class JB4UActivity extends AppCompatActivity {
 
     private JB4Connection jb4Connection;
     private ServiceConnection JB4ServiceConnection;
@@ -30,7 +31,6 @@ public class JB4UActivity extends ActionBarActivity {
     private TextView console;
     private Button startButton;
     private Button stopButton;
-    private Button randomButton;
 
     private ScrollView scrollView;
 
@@ -42,7 +42,8 @@ public class JB4UActivity extends ActionBarActivity {
     @Override
     protected void onDestroy() {
         if (myServiceBinder != null) {
-            myServiceBinder.getJb4Connection().stop();
+            if (myServiceBinder.getJb4Connection() != null)
+                myServiceBinder.getJb4Connection().stop();
             unbindService(myConnection);
         }
         super.onDestroy();
@@ -103,17 +104,6 @@ public class JB4UActivity extends ActionBarActivity {
                 }
             }
         });
-        randomButton = (Button) findViewById(R.id.randomButton);
-        randomButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AddConsoleLine("random click");
-                if (serviceStarted && myServiceBinder != null) {
-                    AddConsoleLine("Random: " + myServiceBinder.getJb4Connection().getData());
-                }
-            }
-        });
-
         AddConsoleLine("init finished");
     }
 
@@ -167,6 +157,7 @@ public class JB4UActivity extends ActionBarActivity {
 
         public void onServiceConnected(ComponentName className, IBinder binder) {
             myServiceBinder = ((JB4ConnectionService.MyBinder) binder).getService();
+            jb4Connection = myServiceBinder.getJb4Connection();
             Log.d(Constants.TAG, "service connected");
         }
 

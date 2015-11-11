@@ -8,18 +8,27 @@ import android.content.Intent;
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.cmg5461.jb4u.data.Constants;
+import com.cmg5461.jb4u.data.JB4Buffer;
 import com.cmg5461.jb4u.data.JB4Command;
+import com.cmg5461.jb4u.log.DetailLogPoint;
 import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.FT_Device;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -56,18 +65,20 @@ public class JB4Connection implements Runnable {
     private final int readDataInterval = 25; // ms
     private final int logHeartbeatInterval = 1000; // ms
     private final int commandDelayInterval = 100; // ms
-    private final int bufferTimeout = 1000;
 
     // buffer vars
-    private int dataPOS = 0;
-    private int bufferSize = 2000;
-    private byte[] byteIN = new byte[bufferSize];
-    private int byte_counter_end = 0;
-    private int byte_counter = 0;
+    private DetailLogPoint logPoint = new DetailLogPoint(true);
+    private JB4Buffer buffer = new JB4Buffer(logPoint);
+    private int maxPoints = 10000;
+    private DetailLogPoint[] storedPoints = new DetailLogPoint[maxPoints];
+    private int storedPointIdx = 0;
 
     public JB4Connection(Service mService) {
         this.mService = mService;
         this.ctx = mService.getApplicationContext();
+        for (int i = 0; i < maxPoints; i++) {
+            storedPoints[i] = new DetailLogPoint();
+        }
     }
 
     public void Connect() {
@@ -120,8 +131,8 @@ public class JB4Connection implements Runnable {
                 Log.d(Constants.TAG, "FAILED TO CONNECT TO JB4 - FUCK");
                 return;
             }
-            dataPOS = 0;
             purgeRX();
+            buffer.updateTimestamp();
             sendBytes(JB4Command.INITIALIZE_CONNECTION2);
             parseData();
             sendBytes(JB4Command.INITIALIZE_CONNECTION3);
@@ -135,10 +146,19 @@ public class JB4Connection implements Runnable {
 
     public void Disconnect() {
         if (ftdev == null || !ftdev.isOpen()) return;
-        stop();
+        if (storedPointIdx > 0) {
+            saveCsvFile(storedPointIdx);
+            storedPointIdx = 0;
+        }
+        logging = false;
+        run = false;
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         ftdev.close();
         ftdev = null;
-        logging = false;
     }
 
     @Override
@@ -163,10 +183,10 @@ public class JB4Connection implements Runnable {
         logHeartBeatThread.start();
         while (run) {
             try {
-
                 if (logging && ftdev != null && ftdev.isOpen()) {
                     parseData();
                 }
+                buffer.updateTimestamp();
                 Thread.sleep(readDataInterval);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -264,8 +284,16 @@ public class JB4Connection implements Runnable {
             byte[] bytes = new byte[len];
             ftdev.read(bytes, len);
             Constants.LogD("DATA RX: " + Arrays.toString(bytes));
+            buffer.AddBytes(bytes);
+            buffer.ParseBuffer();
+            if (logPoint.Rpm < 1 || logPoint.Rpm != storedPoints[storedPointIdx].Rpm || logPoint.Boost != storedPoints[storedPointIdx].Boost) {
+                DetailLogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
+                if (storedPointIdx == maxPoints) {
+                    saveCsvFile(storedPointIdx);
+                    storedPointIdx = 0;
+                }
+            }
         }
-        Constants.LogD("DATA RX: NO DATA AVAILABLE");
     }
 
     private void Toast(String s) {
@@ -302,6 +330,37 @@ public class JB4Connection implements Runnable {
     private void purgeRXTX() {
         ftdev.purge(D2xxManager.FT_PURGE_RX);
         ftdev.purge(D2xxManager.FT_PURGE_TX);
+    }
 
+    private void saveCsvFile(final int rows) {
+        final DetailLogPoint[] tempPoints = new DetailLogPoint[rows];
+        System.arraycopy(storedPoints, 0, tempPoints, 0, rows);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                StringBuilder sb = new StringBuilder();
+                sb.append(DetailLogPoint.getCsvHeader());
+                for (int i = 0; i < rows; i++) {
+                    sb.append(DetailLogPoint.getCsvString(tempPoints[i]));
+                }
+                File folder = new File(Environment.getExternalStorageDirectory() + "/Logs");
+                boolean var = false;
+                if (!folder.exists()) var = folder.mkdir();
+                String filename = folder.toString() + "/JB4U_LOG_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                try {
+                    FileWriter fw = new FileWriter(filename);
+                    fw.write(sb.toString());
+                    fw.flush();
+                    fw.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }).start();
+    }
+
+    public DetailLogPoint getLogPoint() {
+        return logPoint;
     }
 }

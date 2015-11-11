@@ -6,7 +6,7 @@ package com.cmg5461.jb4u.data;
 public enum JB4Data {
     GEAR((byte) 33),
     LEARNED_FF((byte) 35),
-    OILTEMP((byte) 36),
+    OIL_TEMP((byte) 36),
     METH((byte) 37),
     EGT((byte) 38),
     AVG_IGN((byte) 40),
@@ -24,10 +24,11 @@ public enum JB4Data {
     FUEL((byte) 69),
     MAP((byte) 70),
     IAT((byte) 71),
+    CLOCK((byte) 72),
     KR2((byte) 73),
     KR3((byte) 74),
     KR5((byte) 75),
-    AMBIENTT((byte) 76),
+    AMBIENT_V((byte) 76),
     DME_BOOST((byte) 77),
     DME_TARGET((byte) 78),
     KR4((byte) 79),
@@ -42,12 +43,13 @@ public enum JB4Data {
     FUEL_PRESSURE((byte) 88),
     MISSING_FIRMWARE((byte) 89),
     AFR((byte) 94),
-    CPSOFFSET((byte) 96),
+    CPS_OFFSET((byte) 96),
+    CPS_VALUES((byte) 97),
     M1_BOG_FIX((byte) 109),
     M1_FUEL((byte) 110),
     DPS_STRENGTH((byte) 111),
     M1_PID_GAIN((byte) 112),
-    JB3_FIRMWARE((byte) 113),
+    FIRMWARE((byte) 113),
     M1_THROTTLE((byte) 114),
     M1_LAGFIX((byte) 115),
     M1_BOOST_LIMIT((byte) 116),
@@ -59,7 +61,7 @@ public enum JB4Data {
     AVG_IGN_DROP((byte) 122),
     N1_MIN_GEAR((byte) 123),
     N1_MIN_ADV((byte) 124),
-    N1_MIN_AFT((byte) 125),
+    N1_MIN_AFR((byte) 125),
     KR1((byte) 126),;
 
     private byte b;
@@ -70,5 +72,12 @@ public enum JB4Data {
 
     public byte value() {
         return b;
+    }
+
+    public static JB4Data getJB4DataForCmd(byte b) {
+        for (JB4Data data : values()) {
+            if (data.value() == b) return data;
+        }
+        return null;
     }
 }
