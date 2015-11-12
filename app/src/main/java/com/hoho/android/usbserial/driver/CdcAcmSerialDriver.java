@@ -27,7 +27,6 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbRequest;
-import android.os.Build;
 import android.util.Log;
 
 import java.io.IOException;
@@ -90,7 +89,7 @@ public class CdcAcmSerialDriver implements UsbSerialDriver {
 
         public CdcAcmSerialPort(UsbDevice device, int portNumber) {
             super(device, portNumber);
-            mEnableAsyncReads = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1);
+            mEnableAsyncReads = false; //(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1);
         }
 
         @Override

@@ -13,7 +13,6 @@ public class JB4Buffer {
     private int queueLength = 0;
     private byte[] byteIN = new byte[bufferSize];
     private byte[] tempBuffer = new byte[100];
-    private long Timestamp = System.currentTimeMillis();
 
     public JB4Buffer(DetailLogPoint logPoint) {
         this.logPoint = logPoint;
@@ -117,6 +116,7 @@ public class JB4Buffer {
                 break;
             case RPM:
                 logPoint.Rpm = Transform.bytes2Rpm(bytes);
+                //Constants.LogD("RPM IN: " +  logPoint.Rpm + " " + Arrays.toString(bytes));
                 break;
             case BOOST:
                 logPoint.Boost = Transform.bytes2Boost(bytes, scale);
@@ -254,6 +254,6 @@ public class JB4Buffer {
     }
 
     public void updateTimestamp() {
-        Timestamp = System.currentTimeMillis();
+        logPoint.Timestamp = System.currentTimeMillis();
     }
 }

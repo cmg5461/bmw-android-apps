@@ -1,14 +1,10 @@
 package com.cmg5461.jb4u.providers;
 
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.hardware.usb.UsbAccessory;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -18,16 +14,12 @@ import com.cmg5461.jb4u.data.JB4Command;
 import com.cmg5461.jb4u.log.DetailLogPoint;
 import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.FT_Device;
-import com.hoho.android.usbserial.driver.UsbSerialDriver;
-import com.hoho.android.usbserial.driver.UsbSerialProber;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
@@ -39,17 +31,10 @@ public class JB4Connection implements Runnable {
     private Service mService;
     private Context ctx;
 
-    private static final String ACTION_USB_PERMISSION = "com.cmg5461.jb4u.USB_PERMISSION";
-
-    private UsbDevice mUsbDevice;
-    private UsbManager mUsbManager;
-    private UsbSerialDriver mUsbDriver;
-    private PendingIntent mPermissionIntent;
-
     private boolean logging = false;
     private boolean run = false;
-    private boolean mPermissionRequestPending = false;
 
+    // drives and drivers
     private FT_Device ftdev;
     public D2xxManager ftD2xx;
 
@@ -73,7 +58,11 @@ public class JB4Connection implements Runnable {
     private DetailLogPoint[] storedPoints = new DetailLogPoint[maxPoints];
     private int storedPointIdx = 0;
 
+    private Handler mHandler = null;
+
+
     public JB4Connection(Service mService) {
+        mHandler = new Handler(Looper.getMainLooper());
         this.mService = mService;
         this.ctx = mService.getApplicationContext();
         for (int i = 0; i < maxPoints; i++) {
@@ -82,21 +71,7 @@ public class JB4Connection implements Runnable {
     }
 
     public void Connect() {
-        mUsbManager = (UsbManager) mService.getSystemService(Context.USB_SERVICE);
-        List<UsbSerialDriver> drivers = UsbSerialProber.getDefaultProber().findAllDrivers(mUsbManager);
-        if (drivers.isEmpty()) return;
-        mUsbDriver = drivers.get(0);
-        mUsbDevice = mUsbDriver.getDevice();
-        mPermissionIntent = PendingIntent.getBroadcast(mService, 0, new Intent(ACTION_USB_PERMISSION), 0);
-        mUsbManager.requestPermission(mUsbDevice, mPermissionIntent);
-        while (!mUsbManager.hasPermission(mUsbDriver.getDevice())) {
-            synchronized (mUsbReceiver) {
-                if (!mPermissionRequestPending) {
-                    mUsbManager.requestPermission(mUsbDevice, mPermissionIntent);
-                    mPermissionRequestPending = true;
-                }
-            }
-        }
+        Toast("Starting connection!");
         try {
             ftD2xx = D2xxManager.getInstance(mService);
         } catch (D2xxManager.D2xxException e) {
@@ -118,6 +93,7 @@ public class JB4Connection implements Runnable {
             return;
         }
         // ftdev is open!
+        //Toast("Device found!");
         ftdev.setBitMode((byte) 0, bitMode);
         ftdev.setBaudRate(baudRate);
         ftdev.setDataCharacteristics(dataBits, stopBits, parity);
@@ -135,10 +111,10 @@ public class JB4Connection implements Runnable {
             buffer.updateTimestamp();
             sendBytes(JB4Command.INITIALIZE_CONNECTION2);
             parseData();
+            buffer.updateTimestamp();
             sendBytes(JB4Command.INITIALIZE_CONNECTION3);
             parseData();
             logging = true;
-            Log.d(Constants.TAG, "Connected!");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -164,6 +140,28 @@ public class JB4Connection implements Runnable {
     @Override
     public void run() {
         Connect();
+        if (ftdev != null && ftdev.isOpen()) {
+            Toast("Connected!");
+        } else {
+            Toast("Connection failed :(");
+            Thread t = new Thread(new Runnable() {
+                final Random r = new Random();
+
+                @Override
+                public void run() {
+                    while (run) {
+                        logPoint.Rpm = r.nextInt(7000);
+                        logPoint.Boost = r.nextDouble() * 20;
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            t.start();
+        }
         run = true;
         Thread logHeartBeatThread = new Thread(new Runnable() {
             @Override
@@ -181,16 +179,20 @@ public class JB4Connection implements Runnable {
             }
         });
         logHeartBeatThread.start();
+        //long start = System.currentTimeMillis();
         while (run) {
             try {
                 if (logging && ftdev != null && ftdev.isOpen()) {
                     parseData();
+                    buffer.updateTimestamp();
                 }
-                buffer.updateTimestamp();
                 Thread.sleep(readDataInterval);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            //long now = System.currentTimeMillis();
+            //Constants.LogD("Loop time: " + (now - start) + "ms");
+            //start = now;
         }
         Disconnect();
     }
@@ -215,7 +217,7 @@ public class JB4Connection implements Runnable {
         byte[] b = new byte[1];
         for (byte by : bytes) {
             b[0] = by;
-            Constants.LogD("DATA TX: " + new String(b));
+            //Constants.LogD("DATA TX: " + new String(b));
             ftdev.write(b, 1);
             try {
                 Thread.sleep(commandDelayInterval);
@@ -246,7 +248,7 @@ public class JB4Connection implements Runnable {
             if (r == 0) return 88;
             byte[] bytes = new byte[1];
             ftdev.read(bytes, 1);
-            Constants.LogD("DATA RX: " + new String(bytes));
+            //Constants.LogD("DATA RX: " + new String(bytes));
             return bytes[0];
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -269,7 +271,7 @@ public class JB4Connection implements Runnable {
             if (r == 0) return "";
             byte[] bytes = new byte[r];
             ftdev.read(bytes, r);
-            Constants.LogD("DATA RX: " + new String(bytes));
+            //Constants.LogD("DATA RX: " + new String(bytes));
             return new String(bytes);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -283,7 +285,7 @@ public class JB4Connection implements Runnable {
         if (len > 0) {
             byte[] bytes = new byte[len];
             ftdev.read(bytes, len);
-            Constants.LogD("DATA RX: " + Arrays.toString(bytes));
+            //Constants.LogD("DATA RX: " + Arrays.toString(bytes));
             buffer.AddBytes(bytes);
             buffer.ParseBuffer();
             if (logPoint.Rpm < 1 || logPoint.Rpm != storedPoints[storedPointIdx].Rpm || logPoint.Boost != storedPoints[storedPointIdx].Boost) {
@@ -296,28 +298,16 @@ public class JB4Connection implements Runnable {
         }
     }
 
-    private void Toast(String s) {
-        Toast.makeText(mService.getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+    public void Toast(final String s) {
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mService.getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+            }
+        }, 50);
+
         Constants.LogD(s);
     }
-
-    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-            if (ACTION_USB_PERMISSION.equals(action)) {
-                synchronized (this) {
-                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                    } else Constants.LogD("permission denied for device: " + device);
-                }
-            } else if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) {
-                UsbAccessory mDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                if (mDevice != null && mDevice.equals(device)) {
-                    //closeAccessory();
-                }
-            }
-        }
-    };
 
     private void purgeRX() {
         ftdev.purge(D2xxManager.FT_PURGE_RX);
@@ -352,8 +342,10 @@ public class JB4Connection implements Runnable {
                     fw.write(sb.toString());
                     fw.flush();
                     fw.close();
+                    Toast("Save successful.");
                 } catch (IOException e) {
                     e.printStackTrace();
+                    Toast("Save unsuccessful.");
                 }
 
             }

@@ -35,7 +35,9 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="305dp"
-        android:weightSum="1">
+        android:weightSum="1"
+        android:baselineAligned="false"
+        android:gravity="top">
 
         <LinearLayout
             android:orientation="vertical"
@@ -48,7 +50,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="RPM"
+                android:text="Engine Speed"
                 android:id="@+id/textView"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp" />
@@ -110,7 +112,8 @@
             android:editable="false"
             android:layout_marginTop="48dp"
             android:ems="500"
-            android:elegantTextHeight="false" />
+            android:elegantTextHeight="false"
+            android:gravity="bottom" />
     </ScrollView>
 
 </LinearLayout>

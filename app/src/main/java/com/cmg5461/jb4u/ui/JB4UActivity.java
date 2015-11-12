@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,19 +19,19 @@ import android.widget.TextView;
 
 import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
-import com.cmg5461.jb4u.providers.JB4Connection;
+import com.cmg5461.jb4u.log.DetailLogPoint;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
 
 
 public class JB4UActivity extends AppCompatActivity {
 
-    private JB4Connection jb4Connection;
-    private ServiceConnection JB4ServiceConnection;
     private JB4ConnectionService myServiceBinder;
 
     private TextView console;
     private Button startButton;
     private Button stopButton;
+    private TextView rpm;
+    private TextView boost;
 
     private ScrollView scrollView;
 
@@ -38,9 +39,19 @@ public class JB4UActivity extends AppCompatActivity {
     private int consoleLines = 0;
 
     private boolean serviceStarted = false;
+    private boolean run = false;
+
+    private int loopDelay = 100;
+
+    private Handler mHandler;
+
+
+    private Runnable updateLoop;
+    private DetailLogPoint lp;
 
     @Override
     protected void onDestroy() {
+        run = false;
         if (myServiceBinder != null) {
             if (myServiceBinder.getJb4Connection() != null)
                 myServiceBinder.getJb4Connection().stop();
@@ -52,9 +63,39 @@ public class JB4UActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // connection
+        mHandler = new Handler();
+        myConnection = new ServiceConnection() {
+            public void onServiceConnected(ComponentName className, IBinder binder) {
+                myServiceBinder = ((JB4ConnectionService.MyBinder) binder).getService();
+                Log.d(Constants.TAG, "service connected");
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                Log.d(Constants.TAG, "service disconnected");
+                myServiceBinder = null;
+            }
+        };
+
+        // ui update loop
+        updateLoop = new Runnable() {
+            @Override
+            public void run() {
+                if (run) {
+                    updateUI();
+                    try {
+                        Thread.sleep(loopDelay);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    mHandler.post(updateLoop);
+                }
+            }
+        };
         setContentView(R.layout.activity_jb4_buddy);
         InitializeComponents();
-
+        run = true;
+        mHandler.post(updateLoop);
     }
 
     @Override
@@ -63,6 +104,9 @@ public class JB4UActivity extends AppCompatActivity {
     }
 
     private void InitializeComponents() {
+        boost = (TextView) findViewById(R.id.boost_text);
+        rpm = (TextView) findViewById(R.id.rpm_text);
+
         scrollView = (ScrollView) findViewById(R.id.scrollView);
         console = (TextView) findViewById(R.id.console);
         consoleText = new StringBuilder("init");
@@ -153,19 +197,7 @@ public class JB4UActivity extends AppCompatActivity {
         }
     }
 
-    public ServiceConnection myConnection = new ServiceConnection() {
-
-        public void onServiceConnected(ComponentName className, IBinder binder) {
-            myServiceBinder = ((JB4ConnectionService.MyBinder) binder).getService();
-            jb4Connection = myServiceBinder.getJb4Connection();
-            Log.d(Constants.TAG, "service connected");
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            Log.d(Constants.TAG, "service disconnected");
-            myServiceBinder = null;
-        }
-    };
+    public ServiceConnection myConnection;
 
     @Override
     protected void onResume() {
@@ -179,15 +211,26 @@ public class JB4UActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         Log.d(Constants.TAG, "onPause");
-        //if (myServiceBinder != null) {
-        //unbindService(myConnection);
-        //myServiceBinder = null;
-        //}
         super.onPause();
     }
 
     public void doBindService() {
         Intent intent = new Intent(JB4UActivity.this, JB4ConnectionService.class);
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void updateUI() {
+        if (myServiceBinder != null && myServiceBinder.getJb4Connection() != null) {
+            long start = System.currentTimeMillis();
+            if (lp == null) {
+                lp = myServiceBinder.getJb4Connection().getLogPoint();
+            }
+            String b = String.format("%15.2f Psi", lp.Boost);
+            String r = String.format("%15d Rpm", lp.Rpm);
+            boost.setText(b);
+            rpm.setText(r);
+            long now = System.currentTimeMillis();
+            //Constants.LogD((now - start) + "ms elapsed - now: " + now + " lp: " + lp.Timestamp + " from lpts: " + (now - lp.Timestamp) + "ms - " + b + " "+ r);
+        }
     }
 }
