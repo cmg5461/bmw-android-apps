@@ -1,119 +1,117 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:layout_gravity="center_horizontal"
+    android:columnCount="2"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:rowCount="4"
+    android:weightSum="1"
     tools:context=".JB4U"
-    android:orientation="vertical"
-    android:weightSum="1">
+    android:useDefaultMargins="false">
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:weightSum="1"
-        android:gravity="center_horizontal">
-
-        <Button
-            android:id="@+id/stopButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Stahp" />
-
-        <Button
-            android:id="@+id/startButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="305dp"
-        android:weightSum="1"
-        android:baselineAligned="false"
-        android:gravity="top">
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight=".5"
-            android:gravity="right">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="Engine Speed"
-                android:id="@+id/textView"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="Boost"
-                android:id="@+id/textView3"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight=".5"
-            android:gravity="center_horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="Small Text"
-                android:id="@+id/rpm_text"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="Small Text"
-                android:id="@+id/boost_text"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp" />
-
-        </LinearLayout>
-    </LinearLayout>
-
-    <ScrollView
+    <Button
+        android:id="@+id/startButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/scrollView">
+        android:text="Start"
+        android:layout_row="0"
+        android:layout_column="0"
+        android:layout_columnWeight="0.5"
+        android:layout_gravity="center_horizontal" />
+
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stahp"
+        android:layout_row="0"
+        android:layout_column="1"
+        android:layout_columnWeight="0.5"
+        android:layout_gravity="center_horizontal" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="Engine Speed"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_row="1"
+        android:layout_column="0"
+        android:layout_gravity="center|right"
+        android:paddingRight="5dp"
+        android:paddingLeft="5dp"
+        android:layout_columnWeight="0.5" />
+
+    <TextView
+        android:id="@+id/rpm_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="Small Text"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_row="1"
+        android:layout_column="1"
+        android:layout_gravity="left|center_horizontal"
+        android:layout_columnWeight="0.5" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="Boost"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_row="2"
+        android:layout_column="0"
+        android:layout_gravity="right"
+        android:paddingRight="5dp"
+        android:layout_columnWeight="0.5" />
+
+    <TextView
+        android:id="@+id/boost_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="Small Text"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_row="2"
+        android:layout_column="1"
+        android:layout_gravity="left|center_horizontal"
+        android:layout_columnWeight="0.5" />
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_row="3"
+        android:layout_columnSpan="2"
+        android:layout_column="0"
+        android:layout_gravity="bottom">
 
         <TextView
             android:id="@+id/console"
             android:layout_width="wrap_content"
-            android:layout_height="159dp"
+            android:layout_height="wrap_content"
+            android:editable="false"
+            android:elegantTextHeight="false"
+            android:ems="500"
+            android:gravity="bottom"
             android:inputType="textMultiLine"
             android:lines="50"
             android:linksClickable="false"
             android:singleLine="false"
             android:textIsSelectable="false"
-            android:textSize="10sp"
-            android:editable="false"
-            android:layout_marginTop="48dp"
-            android:ems="500"
-            android:elegantTextHeight="false"
-            android:gravity="bottom" />
+            android:textSize="10sp" />
     </ScrollView>
 
-</LinearLayout>
+</GridLayout>

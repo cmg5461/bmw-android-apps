@@ -21,49 +21,53 @@ public class JB4Buffer {
     }
 
     public void AddBytes(byte[] bytes) {
-        for (byte b : bytes) {
-            byteIN[byte_counter_end++] = b;
-            queueLength++;
-            if (byte_counter_end == bufferSize) byte_counter_end = 0;
+        synchronized (this) {
+            for (byte b : bytes) {
+                byteIN[byte_counter_end++] = b;
+                queueLength++;
+                if (byte_counter_end == bufferSize) byte_counter_end = 0;
+            }
         }
     }
 
     public void ParseBuffer() {
-        while (byte_counter != byte_counter_end) {
-            int idx = byte_counter;
-            int tempQueueLength = queueLength;
-            double num2 = logPoint.N20_Tmap == 1 ? 7.045 : 10;
-            byte cmd = byteIN[idx++];
-            if (idx == bufferSize) idx = 0;
-            tempQueueLength--;
-            if (cmd == JB4Data.CPS_VALUES.value()) {
-                if (tempQueueLength < 36) return;
-                for (int idx2 = 0; idx2 < 36; idx2++) {
-                    tempBuffer[idx2] = byteIN[idx2 + idx++];
-                    tempQueueLength--;
-                    if (idx == bufferSize) idx = 0;
-                }
-                tempBuffer[36] = 0;
-                ParseBufferString(cmd, tempBuffer, num2);
-                queueLength = tempQueueLength;
-                byte_counter = idx;
-            } else {
-                int idx2 = 0;
-                while (idx != byte_counter_end) {
-                    byte b = byteIN[idx];
-                    if (b >= 46 && b <= 57) {
-                        tempBuffer[idx2++] = b;
+        synchronized (this) {
+            while (byte_counter != byte_counter_end) {
+                int idx = byte_counter;
+                int tempQueueLength = queueLength;
+                double num2 = logPoint.N20_Tmap == 1 ? 7.045 : 10;
+                byte cmd = byteIN[idx++];
+                if (idx == bufferSize) idx = 0;
+                tempQueueLength--;
+                if (cmd == JB4Data.CPS_VALUES.value()) {
+                    if (tempQueueLength < 36) return;
+                    for (int idx2 = 0; idx2 < 36; idx2++) {
+                        tempBuffer[idx2] = byteIN[idx2 + idx++];
                         tempQueueLength--;
-                        if (++idx == bufferSize) idx = 0;
-                    } else {
-                        tempBuffer[idx2] = 0;
-                        ParseBufferString(cmd, tempBuffer, num2);
-                        queueLength = tempQueueLength;
-                        byte_counter = idx;
-                        break;
+                        if (idx == bufferSize) idx = 0;
                     }
+                    tempBuffer[36] = 0;
+                    ParseBufferString(cmd, tempBuffer, num2);
+                    queueLength = tempQueueLength;
+                    byte_counter = idx;
+                } else {
+                    int idx2 = 0;
+                    while (idx != byte_counter_end) {
+                        byte b = byteIN[idx];
+                        if (b >= 46 && b <= 57) {
+                            tempBuffer[idx2++] = b;
+                            tempQueueLength--;
+                            if (++idx == bufferSize) idx = 0;
+                        } else {
+                            tempBuffer[idx2] = 0;
+                            ParseBufferString(cmd, tempBuffer, num2);
+                            queueLength = tempQueueLength;
+                            byte_counter = idx;
+                            break;
+                        }
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -254,6 +258,8 @@ public class JB4Buffer {
     }
 
     public void updateTimestamp() {
-        logPoint.Timestamp = System.currentTimeMillis();
+        synchronized (this) {
+            logPoint.Timestamp = System.currentTimeMillis();
+        }
     }
 }

@@ -22,17 +22,29 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Chris on 11/4/2015.
  */
-public class JB4Connection implements Runnable {
+public class JB4Connection {
+
+    private static JB4Connection singleton = null;
+
+    public static JB4Connection getSingleton() {
+        if (singleton == null) {
+            singleton = new JB4Connection();
+        }
+        return singleton;
+    }
 
     private Service mService;
     private Context ctx;
 
     private boolean logging = false;
-    private boolean run = false;
 
     // drives and drivers
     private FT_Device ftdev;
@@ -47,9 +59,10 @@ public class JB4Connection implements Runnable {
     private final byte flowControl = D2xxManager.FT_FLOW_NONE;
 
     // communication constants
-    private final int readDataInterval = 25; // ms
-    private final int logHeartbeatInterval = 1000; // ms
+    private final int readInterval = 25; // ms
+    private final int heartbeatInterval = 1000; // ms
     private final int commandDelayInterval = 100; // ms
+    private final int testInterval = 100;
 
     // buffer vars
     private DetailLogPoint logPoint = new DetailLogPoint(true);
@@ -58,42 +71,91 @@ public class JB4Connection implements Runnable {
     private DetailLogPoint[] storedPoints = new DetailLogPoint[maxPoints];
     private int storedPointIdx = 0;
 
+    // timers
+    private final ScheduledExecutorService heartbeatScheduler;
+    private final ScheduledExecutorService readScheduler;
+    private final ScheduledExecutorService testScheduler;
+    private final Runnable heartbeatRunnable;
+    private final Runnable readRunnable;
+    private final Runnable testRunnable;
+    private ScheduledFuture heartbeatLoopFuture = null;
+    private ScheduledFuture readLoopFuture = null;
+    private ScheduledFuture testLoopFuture = null;
+
     private Handler mHandler = null;
 
-
-    public JB4Connection(Service mService) {
+    private JB4Connection() {
         mHandler = new Handler(Looper.getMainLooper());
-        this.mService = mService;
-        this.ctx = mService.getApplicationContext();
+        heartbeatScheduler = Executors.newScheduledThreadPool(1);
+        readScheduler = Executors.newScheduledThreadPool(1);
+        testScheduler = Executors.newScheduledThreadPool(1);
+        heartbeatRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (logging && ftdev != null && ftdev.isOpen()) {
+                        sendBytes(JB4Command.HEARTBEAT_TICK);
+                    }
+                } catch (Throwable t) {
+                    Log.e(Constants.TAG, "heartbeatRunnable ERROR", t);
+                }
+            }
+        };
+        readRunnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (logging && ftdev != null && ftdev.isOpen()) {
+                        parseData();
+                        buffer.updateTimestamp();
+                    }
+                } catch (Throwable t) {
+                    Log.e(Constants.TAG, "readRunnable ERROR", t);
+                }
+            }
+        };
+        testRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (logging) {
+                    Random r = new Random();
+                    logPoint.Rpm = r.nextInt(7000);
+                    logPoint.Boost = r.nextDouble() * 20;
+                }
+            }
+        };
         for (int i = 0; i < maxPoints; i++) {
             storedPoints[i] = new DetailLogPoint();
         }
     }
 
     public void Connect() {
+        Disconnect();
         Toast("Starting connection!");
         try {
             ftD2xx = D2xxManager.getInstance(mService);
         } catch (D2xxManager.D2xxException e) {
             e.printStackTrace();
+            Toast("Error getting FTDI instance");
         }
-        if (!ftD2xx.setVIDPID(1027, 24577)) {
-
-        }
+        ftD2xx.setVIDPID(1027, 24577);
         int nDev = ftD2xx.createDeviceInfoList(ctx);
-        if (nDev < 1) return;
+        if (nDev < 1) {
+            logging = true;
+            testLoopFuture = testScheduler.scheduleAtFixedRate(testRunnable, 0L, 100, TimeUnit.MILLISECONDS);
+            Toast("No device found!");
+            return;
+        }
         for (int i = 0; i < nDev; i++) {
             ftdev = ftD2xx.openByIndex(ctx, i);
             if (ftdev != null) break;
         }
-        if (ftdev == null) {
+        if (ftdev == null || !ftdev.isOpen()) {
+            Toast("Error opening JB4 Connection!");
             return;
         }
-        if (!ftdev.isOpen()) {
-            return;
-        }
+
         // ftdev is open!
-        //Toast("Device found!");
         ftdev.setBitMode((byte) 0, bitMode);
         ftdev.setBaudRate(baudRate);
         ftdev.setDataCharacteristics(dataBits, stopBits, parity);
@@ -104,7 +166,7 @@ public class JB4Connection implements Runnable {
             int s1 = readByte(JB4Command.HEARTBEAT_TICK);
             int s2 = readByte(JB4Command.HEARTBEAT_TICK);
             if ((s1 != 72 && s1 != 59) || (s2 != 72 && s2 != 59)) {
-                Log.d(Constants.TAG, "FAILED TO CONNECT TO JB4 - FUCK");
+                Toast("JB4 did not accept the connection initialization!");
                 return;
             }
             purgeRX();
@@ -114,20 +176,31 @@ public class JB4Connection implements Runnable {
             buffer.updateTimestamp();
             sendBytes(JB4Command.INITIALIZE_CONNECTION3);
             parseData();
-            logging = true;
+            if (ftdev != null && ftdev.isOpen()) {
+                Toast("Connected!");
+                logging = true;
+                heartbeatLoopFuture = heartbeatScheduler.scheduleAtFixedRate(heartbeatRunnable, 0L, heartbeatInterval, TimeUnit.MILLISECONDS);
+                readLoopFuture = readScheduler.scheduleAtFixedRate(readRunnable, 0L, readInterval, TimeUnit.MILLISECONDS);
+            } else {
+                Toast("Connection failed :(");
+            }
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     public void Disconnect() {
+        if (heartbeatLoopFuture != null && !heartbeatLoopFuture.isCancelled())
+            heartbeatLoopFuture.cancel(true);
+        if (readLoopFuture != null && !readLoopFuture.isCancelled()) readLoopFuture.cancel(true);
+        if (testLoopFuture != null && !testLoopFuture.isCancelled()) testLoopFuture.cancel(true);
         if (ftdev == null || !ftdev.isOpen()) return;
         if (storedPointIdx > 0) {
             saveCsvFile(storedPointIdx);
             storedPointIdx = 0;
         }
         logging = false;
-        run = false;
         try {
             Thread.sleep(1500);
         } catch (InterruptedException e) {
@@ -137,68 +210,8 @@ public class JB4Connection implements Runnable {
         ftdev = null;
     }
 
-    @Override
-    public void run() {
-        Connect();
-        if (ftdev != null && ftdev.isOpen()) {
-            Toast("Connected!");
-        } else {
-            Toast("Connection failed :(");
-            Thread t = new Thread(new Runnable() {
-                final Random r = new Random();
-
-                @Override
-                public void run() {
-                    while (run) {
-                        logPoint.Rpm = r.nextInt(7000);
-                        logPoint.Boost = r.nextDouble() * 20;
-                        try {
-                            Thread.sleep(50);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-            t.start();
-        }
-        run = true;
-        Thread logHeartBeatThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (run) {
-                    try {
-                        if (logging && ftdev != null && ftdev.isOpen()) {
-                            sendBytes(JB4Command.HEARTBEAT_TICK);
-                        }
-                        Thread.sleep(logHeartbeatInterval);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-        logHeartBeatThread.start();
-        //long start = System.currentTimeMillis();
-        while (run) {
-            try {
-                if (logging && ftdev != null && ftdev.isOpen()) {
-                    parseData();
-                    buffer.updateTimestamp();
-                }
-                Thread.sleep(readDataInterval);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            //long now = System.currentTimeMillis();
-            //Constants.LogD("Loop time: " + (now - start) + "ms");
-            //start = now;
-        }
-        Disconnect();
-    }
-
     public void stop() {
-        run = false;
+        Disconnect();
     }
 
     public int getData() {
@@ -215,14 +228,16 @@ public class JB4Connection implements Runnable {
         if (ftdev == null || !ftdev.isOpen()) return;
         byte[] bytes = cmd.getBytes();
         byte[] b = new byte[1];
-        for (byte by : bytes) {
-            b[0] = by;
-            //Constants.LogD("DATA TX: " + new String(b));
-            ftdev.write(b, 1);
-            try {
-                Thread.sleep(commandDelayInterval);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        synchronized (this) {
+            for (byte by : bytes) {
+                b[0] = by;
+                //Constants.LogD("DATA TX: " + new String(b));
+                ftdev.write(b, 1);
+                try {
+                    Thread.sleep(commandDelayInterval);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -233,14 +248,13 @@ public class JB4Connection implements Runnable {
 
     public int readByte(String cmd) {
         if (ftdev == null || !ftdev.isOpen()) return -1;
-        int r = 0;
-
         try {
             if (!cmd.equals("")) {
                 purgeRX();
                 sendBytes(cmd);
             }
             int c = 0;
+            int r = ftdev.getQueueStatus();
             while (r == 0 && c++ < 40) {
                 r = ftdev.getQueueStatus();
                 Thread.sleep(20);
@@ -257,13 +271,13 @@ public class JB4Connection implements Runnable {
     }
 
     public String readString(String cmd) {
-        int r = 0;
         try {
             if (!cmd.equals("")) {
                 purgeRX();
                 sendBytes(cmd);
             }
             int c = 0;
+            int r = ftdev.getQueueStatus();
             while (r == 0 && c++ < 40) {
                 r = ftdev.getQueueStatus();
                 Thread.sleep(20);
@@ -281,18 +295,20 @@ public class JB4Connection implements Runnable {
 
     public void parseData() {
         if (ftdev == null || !ftdev.isOpen()) return;
-        int len = ftdev.getQueueStatus();
-        if (len > 0) {
-            byte[] bytes = new byte[len];
-            ftdev.read(bytes, len);
-            //Constants.LogD("DATA RX: " + Arrays.toString(bytes));
-            buffer.AddBytes(bytes);
-            buffer.ParseBuffer();
-            if (logPoint.Rpm < 1 || logPoint.Rpm != storedPoints[storedPointIdx].Rpm || logPoint.Boost != storedPoints[storedPointIdx].Boost) {
-                DetailLogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
-                if (storedPointIdx == maxPoints) {
-                    saveCsvFile(storedPointIdx);
-                    storedPointIdx = 0;
+        synchronized (this) {
+            int r = ftdev.getQueueStatus();
+            if (r > 0) {
+                byte[] bytes = new byte[r];
+                ftdev.read(bytes, r);
+                //Constants.LogD("DATA RX: " + Arrays.toString(bytes));
+                buffer.AddBytes(bytes);
+                buffer.ParseBuffer();
+                if (logPoint.Rpm < 1 || logPoint.Rpm != storedPoints[storedPointIdx].Rpm || logPoint.Boost != storedPoints[storedPointIdx].Boost) {
+                    DetailLogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
+                    if (storedPointIdx == maxPoints) {
+                        saveCsvFile(storedPointIdx);
+                        storedPointIdx = 0;
+                    }
                 }
             }
         }
@@ -354,5 +370,14 @@ public class JB4Connection implements Runnable {
 
     public DetailLogPoint getLogPoint() {
         return logPoint;
+    }
+
+    public void setService(Service mService) {
+        this.mService = mService;
+        this.ctx = mService.getApplicationContext();
+    }
+
+    public boolean isLogging() {
+        return logging;
     }
 }

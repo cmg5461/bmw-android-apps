@@ -20,12 +20,14 @@ import android.widget.TextView;
 import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
 import com.cmg5461.jb4u.log.DetailLogPoint;
+import com.cmg5461.jb4u.providers.JB4Connection;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
 
 
 public class JB4UActivity extends AppCompatActivity {
 
     private JB4ConnectionService myServiceBinder;
+    public ServiceConnection myConnection;
 
     private TextView console;
     private Button startButton;
@@ -41,13 +43,13 @@ public class JB4UActivity extends AppCompatActivity {
     private boolean serviceStarted = false;
     private boolean run = false;
 
-    private int loopDelay = 100;
-
-    private Handler mHandler;
-
+    private final Handler mHandler = new Handler();
 
     private Runnable updateLoop;
     private DetailLogPoint lp;
+
+    private long lastUpdateNanos = System.nanoTime();
+    private int loopDelay = 250;
 
     @Override
     protected void onDestroy() {
@@ -64,7 +66,6 @@ public class JB4UActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // connection
-        mHandler = new Handler();
         myConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder binder) {
                 myServiceBinder = ((JB4ConnectionService.MyBinder) binder).getService();
@@ -76,26 +77,17 @@ public class JB4UActivity extends AppCompatActivity {
                 myServiceBinder = null;
             }
         };
-
-        // ui update loop
         updateLoop = new Runnable() {
             @Override
             public void run() {
                 if (run) {
                     updateUI();
-                    try {
-                        Thread.sleep(loopDelay);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    mHandler.post(updateLoop);
+                    mHandler.postDelayed(updateLoop, loopDelay);
                 }
             }
         };
         setContentView(R.layout.activity_jb4_buddy);
         InitializeComponents();
-        run = true;
-        mHandler.post(updateLoop);
     }
 
     @Override
@@ -125,8 +117,16 @@ public class JB4UActivity extends AppCompatActivity {
                     i.putExtra("name", "JB4ConnectionService");
                     bindService(i, myConnection, Context.BIND_AUTO_CREATE);
                     JB4UActivity.this.startService(i);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            JB4Connection.getSingleton().Connect();
+                        }
+                    }).start();
                     AddConsoleLine("service started");
                     serviceStarted = true;
+                    run = true;
+                    mHandler.postDelayed(updateLoop, loopDelay);
                 }
             }
         });
@@ -139,9 +139,11 @@ public class JB4UActivity extends AppCompatActivity {
                     Intent i = new Intent(JB4UActivity.this, JB4ConnectionService.class);
                     JB4UActivity.this.stopService(i);
                     if (myServiceBinder != null && myServiceBinder.getJb4Connection() != null) {
-                        myServiceBinder.getJb4Connection().stop();
+                        JB4Connection.getSingleton().Disconnect();
                         unbindService(myConnection);
                         myServiceBinder = null;
+                        run = false;
+                        mHandler.removeCallbacks(updateLoop);
                     }
                     serviceStarted = false;
                     AddConsoleLine("service stahpped");
@@ -166,9 +168,7 @@ public class JB4UActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        if (id == R.id.action_settings) return true;
 
         return super.onOptionsItemSelected(item);
     }
@@ -187,24 +187,21 @@ public class JB4UActivity extends AppCompatActivity {
 
         scrollView = (ScrollView) findViewById(R.id.scrollView);
         if (scrollView != null) {
-            scrollView.post(new Runnable() {
+            scrollView.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     scrollView.fullScroll(View.FOCUS_DOWN);
-                    //scrollView.scrollTo(0, scrollView.getBottom());
                 }
-            });
+            }, 25);
         }
     }
-
-    public ServiceConnection myConnection;
 
     @Override
     protected void onResume() {
         Log.d(Constants.TAG, "onResume");
-        if (myServiceBinder == null) {
-            doBindService();
-        }
+        //if (myServiceBinder == null) {
+        doBindService();
+        //}
         super.onResume();
     }
 
@@ -220,17 +217,11 @@ public class JB4UActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        if (myServiceBinder != null && myServiceBinder.getJb4Connection() != null) {
-            long start = System.currentTimeMillis();
-            if (lp == null) {
-                lp = myServiceBinder.getJb4Connection().getLogPoint();
-            }
-            String b = String.format("%15.2f Psi", lp.Boost);
-            String r = String.format("%15d Rpm", lp.Rpm);
+        if (JB4Connection.getSingleton().isLogging()) {
+            String b = String.format("%15.2f Psi", JB4Connection.getSingleton().getLogPoint().Boost);
+            String r = String.format("%15d Rpm", JB4Connection.getSingleton().getLogPoint().Rpm);
             boost.setText(b);
             rpm.setText(r);
-            long now = System.currentTimeMillis();
-            //Constants.LogD((now - start) + "ms elapsed - now: " + now + " lp: " + lp.Timestamp + " from lpts: " + (now - lp.Timestamp) + "ms - " + b + " "+ r);
         }
     }
 }

@@ -11,16 +11,16 @@ import com.cmg5461.jb4u.providers.JB4Connection;
 
 public class JB4ConnectionService extends Service {
     private JB4Connection jb4Connection;
-    private Thread ServiceThread;
-
     private final IBinder mBinder = new MyBinder();
-
-    public JB4ConnectionService() {
-    }
 
     @Override
     public void onCreate() {
         Log.d(Constants.TAG, "service created");
+        if (jb4Connection == null) {
+            jb4Connection = JB4Connection.getSingleton();
+            jb4Connection.setService(this);
+            Log.d(Constants.TAG, "jb4connection initialized");
+        }
         super.onCreate();
     }
 
@@ -28,7 +28,7 @@ public class JB4ConnectionService extends Service {
     public void onDestroy() {
         Log.d(Constants.TAG, "service destroy");
         if (jb4Connection != null) {
-            jb4Connection.stop();
+            jb4Connection.Disconnect();
             jb4Connection = null;
         }
         super.onDestroy();
@@ -37,12 +37,6 @@ public class JB4ConnectionService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(Constants.TAG, "service started");
-        if (jb4Connection == null) {
-            jb4Connection = new JB4Connection(this);
-            ServiceThread = new Thread(jb4Connection);
-            ServiceThread.start();
-            Log.d(Constants.TAG, "jb4 connection thread started");
-        }
         return super.onStartCommand(intent, flags, startId);
     }
 

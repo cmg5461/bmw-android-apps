@@ -1,5 +1,7 @@
 package com.cmg5461.jb4u.data;
 
+import java.util.Arrays;
+
 /**
  * Created by Chris on 11/10/2015.
  */
@@ -153,7 +155,12 @@ public class Transform {
     }
 
     public static String bytes2Firmware(byte[] bytes) {
-        return new String(bytes);
+        for (int i = 0; i < bytes.length; i++) {
+            if (bytes[i] == 0) {
+                return new String(Arrays.copyOfRange(bytes, 0, i));
+            }
+        }
+        return "";
     }
 
     public static double bytes2N1MinPsi(byte[] bytes, double num2) {
