@@ -19,9 +19,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -62,7 +62,7 @@ public class JB4Connection {
     private final int readInterval = 25; // ms
     private final int heartbeatInterval = 1000; // ms
     private final int commandDelayInterval = 100; // ms
-    private final int testInterval = 100;
+    private final int testInterval = 25;
 
     // buffer vars
     private DetailLogPoint logPoint = new DetailLogPoint(true);
@@ -70,6 +70,7 @@ public class JB4Connection {
     private int maxPoints = 10000;
     private DetailLogPoint[] storedPoints = new DetailLogPoint[maxPoints];
     private int storedPointIdx = 0;
+    private byte[] rxBuffer = new byte[512];
 
     // timers
     private final ScheduledExecutorService heartbeatScheduler;
@@ -81,7 +82,6 @@ public class JB4Connection {
     private ScheduledFuture heartbeatLoopFuture = null;
     private ScheduledFuture readLoopFuture = null;
     private ScheduledFuture testLoopFuture = null;
-
     private Handler mHandler = null;
 
     private JB4Connection() {
@@ -118,12 +118,17 @@ public class JB4Connection {
             @Override
             public void run() {
                 if (logging) {
-                    Random r = new Random();
-                    logPoint.Rpm = r.nextInt(7000);
-                    logPoint.Boost = r.nextDouble() * 20;
+                    logPoint.Rpm++;
+                    logPoint.Boost += 0.01;
+                    //long now = System.currentTimeMillis();
+                    //Log.d(Constants.TAG, (now - lastTime) + "ms elapsed");
+                    //lastTime = now;
                 }
             }
         };
+        for (int i = 0; i < rxBuffer.length; i++) {
+            rxBuffer[i] = -1;
+        }
         for (int i = 0; i < maxPoints; i++) {
             storedPoints[i] = new DetailLogPoint();
         }
@@ -142,7 +147,7 @@ public class JB4Connection {
         int nDev = ftD2xx.createDeviceInfoList(ctx);
         if (nDev < 1) {
             logging = true;
-            testLoopFuture = testScheduler.scheduleAtFixedRate(testRunnable, 0L, 100, TimeUnit.MILLISECONDS);
+            testLoopFuture = testScheduler.scheduleAtFixedRate(testRunnable, 0L, testInterval, TimeUnit.MILLISECONDS);
             Toast("No device found!");
             return;
         }
@@ -160,6 +165,8 @@ public class JB4Connection {
         ftdev.setBaudRate(baudRate);
         ftdev.setDataCharacteristics(dataBits, stopBits, parity);
         ftdev.setFlowControl(flowControl, (byte) 0, (byte) 0);
+        // ftdev.setLatencyTimer((byte) 2);
+        ftdev.restartInTask();
         try {
             sendBytes(JB4Command.INITIALIZE_CONNECTION1);
             Thread.sleep(500);
@@ -210,16 +217,6 @@ public class JB4Connection {
         ftdev = null;
     }
 
-    public void stop() {
-        Disconnect();
-    }
-
-    public int getData() {
-        Random r = new Random();
-        r.setSeed(System.currentTimeMillis());
-        return r.nextInt(100000);
-    }
-
     public void sendBytes(JB4Command cmd) {
         sendBytes(cmd.getValue());
     }
@@ -228,16 +225,14 @@ public class JB4Connection {
         if (ftdev == null || !ftdev.isOpen()) return;
         byte[] bytes = cmd.getBytes();
         byte[] b = new byte[1];
-        synchronized (this) {
-            for (byte by : bytes) {
-                b[0] = by;
-                //Constants.LogD("DATA TX: " + new String(b));
-                ftdev.write(b, 1);
-                try {
-                    Thread.sleep(commandDelayInterval);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        for (byte by : bytes) {
+            b[0] = by;
+            //Constants.LogD("DATA TX: " + new String(b));
+            ftdev.write(b, 1);
+            try {
+                Thread.sleep(commandDelayInterval);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -295,20 +290,18 @@ public class JB4Connection {
 
     public void parseData() {
         if (ftdev == null || !ftdev.isOpen()) return;
-        synchronized (this) {
-            int r = ftdev.getQueueStatus();
-            if (r > 0) {
-                byte[] bytes = new byte[r];
-                ftdev.read(bytes, r);
-                //Constants.LogD("DATA RX: " + Arrays.toString(bytes));
-                buffer.AddBytes(bytes);
-                buffer.ParseBuffer();
-                if (logPoint.Rpm < 1 || logPoint.Rpm != storedPoints[storedPointIdx].Rpm || logPoint.Boost != storedPoints[storedPointIdx].Boost) {
-                    DetailLogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
-                    if (storedPointIdx == maxPoints) {
-                        saveCsvFile(storedPointIdx);
-                        storedPointIdx = 0;
-                    }
+        int r = ftdev.getQueueStatus();
+        if (r > 0) {
+            ftdev.read(rxBuffer, r);
+            byte[] rx = Arrays.copyOfRange(rxBuffer, 0, r);
+            //Constants.LogD("DATA RX: " + Arrays.toString(rx));
+            buffer.AddBytes(rx);
+            buffer.ParseBuffer();
+            if (logPoint.Rpm < 1 || logPoint.Rpm != storedPoints[storedPointIdx].Rpm || logPoint.Boost != storedPoints[storedPointIdx].Boost) {
+                DetailLogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
+                if (storedPointIdx == maxPoints) {
+                    saveCsvFile(storedPointIdx);
+                    storedPointIdx = 0;
                 }
             }
         }

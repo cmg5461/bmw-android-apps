@@ -2,6 +2,8 @@ package com.cmg5461.jb4u.data;
 
 import com.cmg5461.jb4u.log.DetailLogPoint;
 
+import java.util.Arrays;
+
 /**
  * Created by Chris on 11/10/2015.
  */
@@ -66,7 +68,7 @@ public class JB4Buffer {
                             break;
                         }
                     }
-                    break;
+                    if (idx == byte_counter_end) break;
                 }
             }
         }
@@ -120,7 +122,7 @@ public class JB4Buffer {
                 break;
             case RPM:
                 logPoint.Rpm = Transform.bytes2Rpm(bytes);
-                //Constants.LogD("RPM IN: " +  logPoint.Rpm + " " + Arrays.toString(bytes));
+                Constants.LogD("RPM IN: " + logPoint.Rpm + " " + Arrays.toString(bytes));
                 break;
             case BOOST:
                 logPoint.Boost = Transform.bytes2Boost(bytes, scale);
@@ -258,8 +260,6 @@ public class JB4Buffer {
     }
 
     public void updateTimestamp() {
-        synchronized (this) {
-            logPoint.Timestamp = System.currentTimeMillis();
-        }
+        logPoint.Timestamp = System.currentTimeMillis();
     }
 }

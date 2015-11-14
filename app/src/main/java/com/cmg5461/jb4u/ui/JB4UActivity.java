@@ -1,12 +1,15 @@
 package com.cmg5461.jb4u.ui;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -19,14 +22,17 @@ import android.widget.TextView;
 
 import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
-import com.cmg5461.jb4u.log.DetailLogPoint;
-import com.cmg5461.jb4u.providers.JB4Connection;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 
 public class JB4UActivity extends AppCompatActivity {
 
-    private JB4ConnectionService myServiceBinder;
+    private JB4ConnectionService myService;
     public ServiceConnection myConnection;
 
     private TextView console;
@@ -40,62 +46,97 @@ public class JB4UActivity extends AppCompatActivity {
     private StringBuilder consoleText;
     private int consoleLines = 0;
 
-    private boolean serviceStarted = false;
-    private boolean run = false;
+    private boolean connected = false;
 
-    private final Handler mHandler = new Handler();
+    private final ScheduledExecutorService updateScheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture updateFuture;
 
-    private Runnable updateLoop;
-    private DetailLogPoint lp;
+    private int loopDelay = 100;
 
-    private long lastUpdateNanos = System.nanoTime();
-    private int loopDelay = 250;
+    //private StringBuilder sbText = new StringBuilder();
+    //private Formatter sbFormat = new Formatter(sbText, Locale.US);
+
+    private NotificationManager mNM;
+    private final int notificationID = 86756309;
+    private Runnable updateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateUI();
+                    }
+                });
+            } catch (Throwable t) {
+                Log.e(Constants.TAG, "updateRunnable ERROR", t);
+            }
+        }
+    };
 
     @Override
     protected void onDestroy() {
-        run = false;
-        if (myServiceBinder != null) {
-            if (myServiceBinder.getJb4Connection() != null)
-                myServiceBinder.getJb4Connection().stop();
-            unbindService(myConnection);
+        Log.d(Constants.TAG, "ACTIVITY onDestroy");
+        if (myService != null) {
+            myService.disconnect();
         }
+        stopService();
         super.onDestroy();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(Constants.TAG, "ACTIVITY onCreate");
+        mNM = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        showNotification();
         // connection
         myConnection = new ServiceConnection() {
             public void onServiceConnected(ComponentName className, IBinder binder) {
-                myServiceBinder = ((JB4ConnectionService.MyBinder) binder).getService();
+                myService = ((JB4ConnectionService.MyBinder) binder).getService();
                 Log.d(Constants.TAG, "service connected");
             }
 
             public void onServiceDisconnected(ComponentName className) {
+                myService = null;
                 Log.d(Constants.TAG, "service disconnected");
-                myServiceBinder = null;
             }
         };
-        updateLoop = new Runnable() {
-            @Override
-            public void run() {
-                if (run) {
-                    updateUI();
-                    mHandler.postDelayed(updateLoop, loopDelay);
-                }
-            }
-        };
+        startService();
         setContentView(R.layout.activity_jb4_buddy);
-        InitializeComponents();
+        initializeComponents();
+    }
+
+    private void startService() {
+        JB4UActivity.this.startService(new Intent(JB4UActivity.this, JB4ConnectionService.class));
+    }
+
+    private void stopService() {
+        JB4UActivity.this.stopService(new Intent(JB4UActivity.this, JB4ConnectionService.class));
     }
 
     @Override
     protected void onStart() {
+        Log.d(Constants.TAG, "ACTIVITY onStart");
+        doBindService();
+        if (connected && updateFuture != null && updateFuture.isCancelled()) startUpdater();
         super.onStart();
     }
 
-    private void InitializeComponents() {
+    private void startUpdater() {
+        stopUpdater();
+        updateFuture = updateScheduler.scheduleAtFixedRate(updateRunnable, 0L, loopDelay, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(Constants.TAG, "ACTIVITY onStop");
+        if (updateFuture != null && !updateFuture.isCancelled()) updateFuture.cancel(true);
+        if (myConnection != null) unbindService(myConnection);
+        super.onStop();
+    }
+
+    private void initializeComponents() {
         boost = (TextView) findViewById(R.id.boost_text);
         rpm = (TextView) findViewById(R.id.rpm_text);
 
@@ -112,21 +153,13 @@ public class JB4UActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 AddConsoleLine("service start click");
-                if (!serviceStarted) {
-                    Intent i = new Intent(JB4UActivity.this, JB4ConnectionService.class);
-                    i.putExtra("name", "JB4ConnectionService");
-                    bindService(i, myConnection, Context.BIND_AUTO_CREATE);
-                    JB4UActivity.this.startService(i);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            JB4Connection.getSingleton().Connect();
-                        }
-                    }).start();
-                    AddConsoleLine("service started");
-                    serviceStarted = true;
-                    run = true;
-                    mHandler.postDelayed(updateLoop, loopDelay);
+                if (!connected) {
+                    if (myService != null) {
+                        connected = true;
+                        myService.connect();
+                        startUpdater();
+                        AddConsoleLine("service started");
+                    }
                 }
             }
         });
@@ -135,22 +168,22 @@ public class JB4UActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 AddConsoleLine("service stahp click");
-                if (serviceStarted) {
-                    Intent i = new Intent(JB4UActivity.this, JB4ConnectionService.class);
-                    JB4UActivity.this.stopService(i);
-                    if (myServiceBinder != null && myServiceBinder.getJb4Connection() != null) {
-                        JB4Connection.getSingleton().Disconnect();
-                        unbindService(myConnection);
-                        myServiceBinder = null;
-                        run = false;
-                        mHandler.removeCallbacks(updateLoop);
+                if (connected) {
+                    if (myService != null) {
+                        connected = false;
+                        myService.disconnect();
+                        stopUpdater();
+                        AddConsoleLine("service stahpped");
                     }
-                    serviceStarted = false;
-                    AddConsoleLine("service stahpped");
                 }
             }
         });
         AddConsoleLine("init finished");
+    }
+
+    public void stopUpdater() {
+        if (updateFuture != null && !updateFuture.isCancelled())
+            updateFuture.cancel(true);
     }
 
     @Override
@@ -198,30 +231,65 @@ public class JB4UActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        Log.d(Constants.TAG, "onResume");
-        //if (myServiceBinder == null) {
-        doBindService();
-        //}
+        Log.d(Constants.TAG, "ACTIVITY onResume");
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        Log.d(Constants.TAG, "onPause");
+        Log.d(Constants.TAG, "ACTIVITY onPause");
         super.onPause();
     }
 
     public void doBindService() {
-        Intent intent = new Intent(JB4UActivity.this, JB4ConnectionService.class);
-        bindService(intent, myConnection, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(JB4UActivity.this, JB4ConnectionService.class), myConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void updateUI() {
-        if (JB4Connection.getSingleton().isLogging()) {
-            String b = String.format("%15.2f Psi", JB4Connection.getSingleton().getLogPoint().Boost);
-            String r = String.format("%15d Rpm", JB4Connection.getSingleton().getLogPoint().Rpm);
-            boost.setText(b);
-            rpm.setText(r);
+        if (connected) {
+            //sbFormat.format("%15.2f Psi", myService.getPoint().Boost);
+            boost.setText(String.format("%15.2f PSI", myService.getPoint().Boost));
+            //sbText.setLength(0);
+            //sbFormat.format("%15d Rpm", myService.getPoint().Rpm);
+            rpm.setText(String.format("%15s RPM", myService.getPoint().Rpm));
+            //sbText.setLength(0);
         }
     }
+
+    private void showNotification() {
+        // In this sample, we'll use the same text for the ticker and the expanded notification
+        CharSequence text = "Running!";
+
+        // The PendingIntent to launch our activity if the user selects this notification
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, JB4UActivity.class), 0);
+
+        // Set the info for the views that show in the notification panel.
+        Notification.Builder nb = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.notification_template_icon_bg)  // the status icon
+                .setTicker(text)  // the status text
+                .setWhen(System.currentTimeMillis())  // the time stamp
+                .setContentTitle("JB4U")  // the label of the entry
+                .setContentText(text)  // the contents of the entry
+                .setContentIntent(contentIntent); // The intent to send when the entry is clicked
+
+        // Send the notification.
+        Notification notification;
+        if (Build.VERSION.SDK_INT < 16) {
+            notification = nb.getNotification();
+            notification.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+            //notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        } else {
+            notification = nb.build();
+            notification.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+        }
+        mNM.notify(notificationID, notification);
+    }
+
+    @Override
+    public void onBackPressed() {
+        moveTaskToBack(true);
+    }
+
+
 }
