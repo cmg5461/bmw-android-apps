@@ -1,5 +1,6 @@
-package com.cmg5461.jb4u.ui;
+package com.cmg5461.jb4u.ui.activity;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -7,22 +8,21 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ScrollView;
+import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
+import com.cmg5461.jb4u.ui.views.GaugeView;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,18 +30,17 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 
-public class JB4UActivity extends AppCompatActivity {
+public class JB4UActivity extends Activity {
 
     private JB4ConnectionService myService;
     public ServiceConnection myConnection;
 
-    private TextView console;
-    private Button startButton;
-    private Button stopButton;
+    //private TextView console;
+    private ImageButton connectButton;
     private TextView rpm;
     private TextView boost;
 
-    private ScrollView scrollView;
+    //private ScrollView scrollView;
 
     private StringBuilder consoleText;
     private int consoleLines = 0;
@@ -56,8 +55,10 @@ public class JB4UActivity extends AppCompatActivity {
     //private StringBuilder sbText = new StringBuilder();
     //private Formatter sbFormat = new Formatter(sbText, Locale.US);
 
+    private GaugeView rpm_gauge;
+
     private NotificationManager mNM;
-    private final int notificationID = 86756309;
+    private final int notificationID = 8675309;
     private Runnable updateRunnable = new Runnable() {
         @Override
         public void run() {
@@ -103,7 +104,9 @@ public class JB4UActivity extends AppCompatActivity {
             }
         };
         startService();
-        setContentView(R.layout.activity_jb4_buddy);
+        setContentView(R.layout.activity_home);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         initializeComponents();
     }
 
@@ -137,19 +140,20 @@ public class JB4UActivity extends AppCompatActivity {
     }
 
     private void initializeComponents() {
-        boost = (TextView) findViewById(R.id.boost_text);
-        rpm = (TextView) findViewById(R.id.rpm_text);
+        boost = (TextView) findViewById(R.id.textBoost);
+        rpm = (TextView) findViewById(R.id.textRPM);
+        rpm_gauge = (GaugeView) findViewById(R.id.gaugeRPM);
 
-        scrollView = (ScrollView) findViewById(R.id.scrollView);
-        console = (TextView) findViewById(R.id.console);
+        //scrollView = (ScrollView) findViewById(R.id.scrollView);
+        //console = (TextView) findViewById(R.id.console);
         consoleText = new StringBuilder("init");
-        console.setText(consoleText.toString());
-        console.setEnabled(false);
-        console.setTextColor(Color.BLACK);
+        //console.setText(consoleText.toString());
+        //console.setEnabled(false);
+        //console.setTextColor(Color.BLACK);
         consoleLines++;
 
-        startButton = (Button) findViewById(R.id.startButton);
-        startButton.setOnClickListener(new View.OnClickListener() {
+        connectButton = (ImageButton) findViewById(R.id.imageButton_toggleConnect);
+        connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 AddConsoleLine("service start click");
@@ -158,21 +162,15 @@ public class JB4UActivity extends AppCompatActivity {
                         connected = true;
                         myService.connect();
                         startUpdater();
+                        connectButton.setBackgroundResource(R.drawable.disconnect);
                         AddConsoleLine("service started");
                     }
-                }
-            }
-        });
-        stopButton = (Button) findViewById(R.id.stopButton);
-        stopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AddConsoleLine("service stahp click");
-                if (connected) {
+                } else {
                     if (myService != null) {
                         connected = false;
                         myService.disconnect();
                         stopUpdater();
+                        connectButton.setBackgroundResource(R.drawable.connect);
                         AddConsoleLine("service stahpped");
                     }
                 }
@@ -216,17 +214,17 @@ public class JB4UActivity extends AppCompatActivity {
             consoleLines--;
         }
         Log.d(Constants.TAG, "Console: " + text);
-        console.setText(consoleText.toString());
+        //console.setText(consoleText.toString());
 
-        scrollView = (ScrollView) findViewById(R.id.scrollView);
-        if (scrollView != null) {
-            scrollView.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    scrollView.fullScroll(View.FOCUS_DOWN);
-                }
-            }, 25);
-        }
+        //scrollView = (ScrollView) findViewById(R.id.scrollView);
+        //if (scrollView != null) {
+        //    scrollView.postDelayed(new Runnable() {
+        //        @Override
+        //        public void run() {
+        //            scrollView.fullScroll(View.FOCUS_DOWN);
+        //        }
+        //    }, 25);
+        //}
     }
 
     @Override
@@ -252,6 +250,7 @@ public class JB4UActivity extends AppCompatActivity {
             //sbText.setLength(0);
             //sbFormat.format("%15d Rpm", myService.getPoint().Rpm);
             rpm.setText(String.format("%15s RPM", myService.getPoint().Rpm));
+            rpm_gauge.setTargetValue(myService.getPoint().Rpm);
             //sbText.setLength(0);
         }
     }

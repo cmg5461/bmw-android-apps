@@ -262,4 +262,8 @@ public class JB4Buffer {
     public void updateTimestamp() {
         logPoint.Timestamp = System.currentTimeMillis();
     }
+
+    public DetailLogPoint getLogPoint() {
+        return logPoint;
+    }
 }

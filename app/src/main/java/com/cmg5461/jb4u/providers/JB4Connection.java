@@ -64,6 +64,8 @@ public class JB4Connection {
     private final int commandDelayInterval = 100; // ms
     private final int testInterval = 25;
 
+    private StringBuilder sb = new StringBuilder();
+
     // buffer vars
     private DetailLogPoint logPoint = new DetailLogPoint(true);
     private JB4Buffer buffer = new JB4Buffer(logPoint);
@@ -83,6 +85,8 @@ public class JB4Connection {
     private ScheduledFuture readLoopFuture = null;
     private ScheduledFuture testLoopFuture = null;
     private Handler mHandler = null;
+
+    private Toast mToast = null;
 
     private JB4Connection() {
         mHandler = new Handler(Looper.getMainLooper());
@@ -294,6 +298,9 @@ public class JB4Connection {
         if (r > 0) {
             ftdev.read(rxBuffer, r);
             byte[] rx = Arrays.copyOfRange(rxBuffer, 0, r);
+            sb.append(System.currentTimeMillis());
+            for (int i = 0; i < r; i++) sb.append(',').append(rx[i]);
+            sb.append('\n');
             //Constants.LogD("DATA RX: " + Arrays.toString(rx));
             buffer.AddBytes(rx);
             buffer.ParseBuffer();
@@ -311,7 +318,9 @@ public class JB4Connection {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(mService.getApplicationContext(), s, Toast.LENGTH_SHORT).show();
+                if (mToast != null) mToast.cancel();
+                mToast = Toast.makeText(mService.getApplicationContext(), s, Toast.LENGTH_SHORT);
+                mToast.show();
             }
         }, 50);
 
@@ -334,6 +343,7 @@ public class JB4Connection {
     private void saveCsvFile(final int rows) {
         final DetailLogPoint[] tempPoints = new DetailLogPoint[rows];
         System.arraycopy(storedPoints, 0, tempPoints, 0, rows);
+        final StringBuilder raw = sb;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -343,9 +353,20 @@ public class JB4Connection {
                     sb.append(DetailLogPoint.getCsvString(tempPoints[i]));
                 }
                 File folder = new File(Environment.getExternalStorageDirectory() + "/Logs");
-                boolean var = false;
+                boolean var;
                 if (!folder.exists()) var = folder.mkdir();
                 String filename = folder.toString() + "/JB4U_LOG_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                String filename2 = folder.toString() + "/JB4U_RAW_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                try {
+                    FileWriter fw = new FileWriter(filename2);
+                    fw.write(raw.toString());
+                    fw.flush();
+                    fw.close();
+                    Toast("RAW Save successful.");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast("Save unsuccessful.");
+                }
                 try {
                     FileWriter fw = new FileWriter(filename);
                     fw.write(sb.toString());
@@ -356,7 +377,6 @@ public class JB4Connection {
                     e.printStackTrace();
                     Toast("Save unsuccessful.");
                 }
-
             }
         }).start();
     }

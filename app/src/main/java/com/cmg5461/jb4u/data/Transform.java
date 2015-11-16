@@ -66,7 +66,7 @@ public class Transform {
     }
 
     public static double bytes2Afr2(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+        return convertByteArrayToDouble(bytes) / 10;
     }
 
     public static double bytes2Ambientv(byte[] bytes) {
