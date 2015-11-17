@@ -287,7 +287,11 @@ public class JB4UActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        moveTaskToBack(true);
+        if (connected) moveTaskToBack(true);
+        else {
+            super.onBackPressed();
+            mNM.cancel(notificationID);
+        }
     }
 
 
