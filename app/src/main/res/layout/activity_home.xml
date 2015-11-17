@@ -1,120 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:gauge="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    android:id="@+id/mainLayout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="#000000"
-    android:id="@+id/mainLayout">
+    android:orientation="vertical">
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/layoutHeader"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="JB4U"
-            android:id="@+id/textView2"
+            android:textAppearance="?android:attr/textAppearanceLarge"
             android:textSize="35sp" />
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:id="@+id/layoutBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/layoutBody"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="2"
-            android:paddingRight="1dp"
-            android:gravity="right">
+            android:gravity="right"
+            android:orientation="vertical"
+            android:paddingRight="1dp">
 
             <TextView
+                android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="RPM"
-                android:id="@+id/textView4"
+                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="30sp" />
 
             <TextView
+                android:id="@+id/textView6"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="Boost"
-                android:id="@+id/textView6"
+                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="30sp" />
 
         </LinearLayout>
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center_horizontal">
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
             <TextView
+                android:id="@+id/textRPM"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="null"
-                android:id="@+id/textRPM"
+                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="30sp" />
 
             <TextView
+                android:id="@+id/textBoost"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="null"
-                android:id="@+id/textBoost"
+                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textSize="30sp" />
         </LinearLayout>
 
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <com.cmg5461.jb4u.ui.views.GaugeView
+            android:id="@+id/gaugeRPM"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_marginTop="10dp"
-            gauge:scaleStartValue="0"
             gauge:divisions="8"
             gauge:scaleEndValue="8000"
-            gauge:showOuterShadow="false"
+            gauge:scaleStartValue="0"
+            gauge:showInnerRim="false"
+            gauge:showOuterBorder="false"
             gauge:showOuterRim="false"
+            gauge:showOuterShadow="false"
             gauge:showText="true"
-            gauge:textUnit="RPM"
-            android:id="@+id/gaugeRPM" />
+            gauge:subdivisions="10"
+            gauge:textUnit="RPM" />
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:id="@+id/layoutFooter"
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
         android:gravity="bottom|center_horizontal"
-        android:id="@+id/layoutFooter">
+        android:orientation="horizontal">
 
         <ImageButton
+            android:id="@+id/imageButton_toggleConnect"
             android:layout_width="180dp"
             android:layout_height="30dp"
-            android:id="@+id/imageButton_toggleConnect"
-            android:longClickable="false"
-            android:cropToPadding="false"
+            android:adjustViewBounds="true"
             android:background="@drawable/connect"
-            android:adjustViewBounds="true" />
+            android:cropToPadding="false"
+            android:longClickable="false" />
     </LinearLayout>
 </LinearLayout>

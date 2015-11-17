@@ -51,13 +51,13 @@ public class GaugeView extends View {
     public static final float INNER_RIM_WIDTH = 0.06f;
     public static final float INNER_RIM_BORDER_WIDTH = 0.005f;
 
-    public static final float NEEDLE_WIDTH = 0.035f;
-    public static final float NEEDLE_HEIGHT = 0.28f;
+    public static final float NEEDLE_WIDTH = 0.010f;
+    public static final float NEEDLE_HEIGHT = 0.46f;
 
     public static final float SCALE_POSITION = 0.025f;
     public static final float SCALE_START_VALUE = 0.0f;
     public static final float SCALE_END_VALUE = 100.0f;
-    public static final float SCALE_START_ANGLE = 30.0f;
+    public static final float SCALE_START_ANGLE = 45.0f;
     public static final int SCALE_DIVISIONS = 10;
     public static final int SCALE_SUBDIVISIONS = 5;
 
@@ -65,8 +65,8 @@ public class GaugeView extends View {
             Color.argb(5, 255, 255, 255)};
     public static final float[] OUTER_SHADOW_POS = {0.90f, 0.95f, 0.99f};
 
-    public static final float[] RANGE_VALUES = {6500.0f, 7000.0f, 80000.0f};
-    public static final int[] RANGE_COLORS = {Color.rgb(27, 202, 33), Color.rgb(232, 231, 33), Color.rgb(231, 32, 43)};
+    public static final float[] RANGE_VALUES = {80000.0f};
+    public static final int[] RANGE_COLORS = {Color.rgb(227, 85, 35)};
 
     public static final int TEXT_SHADOW_COLOR = Color.argb(100, 0, 0, 0);
     public static final int TEXT_VALUE_COLOR = Color.WHITE;
@@ -411,23 +411,23 @@ public class GaugeView extends View {
 
     public Paint getDefaultFacePaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setShader(new RadialGradient(0.5f, 0.5f, mFaceRect.width() / 2, new int[]{Color.rgb(50, 132, 206), Color.rgb(36, 89, 162),
-                Color.rgb(27, 59, 131)}, new float[]{0.5f, 0.96f, 0.99f}, TileMode.MIRROR));
+        paint.setShader(new RadialGradient(0.5f, 0.5f, mFaceRect.width() / 2, new int[]{Color.rgb(0, 0, 0), Color.rgb(0, 0, 0),
+                Color.rgb(0, 0, 0)}, new float[]{0.5f, 0.96f, 0.99f}, TileMode.MIRROR));
         return paint;
     }
 
     public Paint getDefaultFaceBorderPaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(Color.argb(100, 81, 84, 89));
+        paint.setColor(Color.argb(100, 0, 0, 0));
         paint.setStrokeWidth(0.005f);
         return paint;
     }
 
     public Paint getDefaultFaceShadowPaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setShader(new RadialGradient(0.5f, 0.5f, mFaceRect.width() / 2.0f, new int[]{Color.argb(60, 40, 96, 170),
-                Color.argb(80, 15, 34, 98), Color.argb(120, 0, 0, 0), Color.argb(140, 0, 0, 0)},
+        paint.setShader(new RadialGradient(0.5f, 0.5f, mFaceRect.width() / 2.0f, new int[]{Color.argb(60, 0, 0, 0),
+                Color.argb(80, 0, 0, 0), Color.argb(120, 0, 0, 0), Color.argb(140, 0, 0, 0)},
                 new float[]{0.60f, 0.85f, 0.96f, 0.99f}, TileMode.MIRROR));
         return paint;
     }
@@ -436,35 +436,49 @@ public class GaugeView extends View {
         final float x = 0.5f, y = 0.5f;
         mNeedleLeftPath = new Path();
         mNeedleLeftPath.moveTo(x, y);
+        mNeedleLeftPath.lineTo(x, y + 0.05f);
+        mNeedleLeftPath.lineTo(x - mNeedleWidth, y + 0.05f);
         mNeedleLeftPath.lineTo(x - mNeedleWidth, y);
+        mNeedleLeftPath.lineTo((float) (x - mNeedleWidth / 1.5), y - mNeedleHeight);
         mNeedleLeftPath.lineTo(x, y - mNeedleHeight);
         mNeedleLeftPath.lineTo(x, y);
-        mNeedleLeftPath.lineTo(x - mNeedleWidth, y);
+        //mNeedleLeftPath.lineTo(x - mNeedleWidth, y);
+
+        //mNeedleLeftPath.moveTo(x, y);
+        //mNeedleLeftPath.lineTo(x - mNeedleWidth, y);
+        //mNeedleLeftPath.lineTo(x, y - mNeedleHeight);
+        //mNeedleLeftPath.lineTo(x, y - mNeedleHeight / 2);
+        //mNeedleLeftPath.lineTo(x, y);
+        //mNeedleLeftPath.lineTo(x - mNeedleWidth, y);
 
         mNeedleRightPath = new Path();
         mNeedleRightPath.moveTo(x, y);
+        mNeedleRightPath.lineTo(x, y + 0.05f);
+        mNeedleRightPath.lineTo(x + mNeedleWidth, y + 0.05f);
         mNeedleRightPath.lineTo(x + mNeedleWidth, y);
+        mNeedleRightPath.lineTo((float) (x + mNeedleWidth / 1.5), y - mNeedleHeight);
         mNeedleRightPath.lineTo(x, y - mNeedleHeight);
         mNeedleRightPath.lineTo(x, y);
-        mNeedleRightPath.lineTo(x + mNeedleWidth, y);
+        //mNeedleRightPath.lineTo(x + mNeedleWidth, y);
     }
 
     public Paint getDefaultNeedleLeftPaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.rgb(176, 10, 19));
+        int c = Color.rgb(227, 85, 35);
+        paint.setColor(c);
         return paint;
     }
 
     public Paint getDefaultNeedleRightPaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setColor(Color.rgb(252, 18, 30));
+        paint.setColor(Color.rgb(227, 85, 35));
         paint.setShadowLayer(0.01f, 0.005f, -0.005f, Color.argb(127, 0, 0, 0));
         return paint;
     }
 
     public Paint getDefaultNeedleScrewPaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setShader(new RadialGradient(0.5f, 0.5f, 0.07f, new int[]{Color.rgb(171, 171, 171), Color.WHITE}, new float[]{0.05f,
+        paint.setShader(new RadialGradient(0.5f, 0.5f, 0.07f, new int[]{Color.rgb(0, 0, 0), Color.BLACK}, new float[]{0.05f,
                 0.9f}, TileMode.MIRROR));
         return paint;
     }
@@ -472,7 +486,7 @@ public class GaugeView extends View {
     public Paint getDefaultNeedleScrewBorderPaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(Color.argb(100, 81, 84, 89));
+        paint.setColor(Color.argb(100, 227, 85, 35));
         paint.setStrokeWidth(0.005f);
         return paint;
     }
@@ -770,14 +784,16 @@ public class GaugeView extends View {
             canvas.rotate(angle, 0.5f, 0.5f);
 
             setNeedleShadowPosition(angle);
-            canvas.drawPath(mNeedleLeftPath, mNeedleLeftPaint);
-            canvas.drawPath(mNeedleRightPath, mNeedleRightPaint);
 
-            canvas.restore();
 
             // Draw the needle screw and its border
             canvas.drawCircle(0.5f, 0.5f, 0.04f, mNeedleScrewPaint);
             canvas.drawCircle(0.5f, 0.5f, 0.04f, mNeedleScrewBorderPaint);
+
+            canvas.drawPath(mNeedleLeftPath, mNeedleLeftPaint);
+            canvas.drawPath(mNeedleRightPath, mNeedleRightPaint);
+
+            canvas.restore();
         }
     }
 
@@ -826,6 +842,8 @@ public class GaugeView extends View {
             } else {
                 mNeedleLastMoved = System.currentTimeMillis();
             }
+
+            mCurrentValue = mTargetValue;
 
             invalidate();
 

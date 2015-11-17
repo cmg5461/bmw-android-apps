@@ -12,6 +12,7 @@ import com.cmg5461.jb4u.data.Constants;
 import com.cmg5461.jb4u.data.JB4Buffer;
 import com.cmg5461.jb4u.data.JB4Command;
 import com.cmg5461.jb4u.log.DetailLogPoint;
+import com.cmg5461.jb4u.log.JB4SettingPoint;
 import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.FT_Device;
 
@@ -68,7 +69,8 @@ public class JB4Connection {
 
     // buffer vars
     private DetailLogPoint logPoint = new DetailLogPoint(true);
-    private JB4Buffer buffer = new JB4Buffer(logPoint);
+    private JB4SettingPoint settingPoint = new JB4SettingPoint();
+    private JB4Buffer buffer = new JB4Buffer(logPoint, settingPoint);
     private int maxPoints = 10000;
     private DetailLogPoint[] storedPoints = new DetailLogPoint[maxPoints];
     private int storedPointIdx = 0;
@@ -122,8 +124,8 @@ public class JB4Connection {
             @Override
             public void run() {
                 if (logging) {
-                    logPoint.Rpm++;
-                    logPoint.Boost += 0.01;
+                    logPoint.rpm++;
+                    logPoint.boost += 0.01;
                     //long now = System.currentTimeMillis();
                     //Log.d(Constants.TAG, (now - lastTime) + "ms elapsed");
                     //lastTime = now;
@@ -304,7 +306,7 @@ public class JB4Connection {
             //Constants.LogD("DATA RX: " + Arrays.toString(rx));
             buffer.AddBytes(rx);
             buffer.ParseBuffer();
-            if (logPoint.Rpm < 1 || logPoint.Rpm != storedPoints[storedPointIdx].Rpm || logPoint.Boost != storedPoints[storedPointIdx].Boost) {
+            if (storedPointIdx - 1 < 0 || logPoint.rpm < 1 || logPoint.rpm != storedPoints[storedPointIdx - 1].rpm || logPoint.boost != storedPoints[storedPointIdx - 1].boost) {
                 DetailLogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
                 if (storedPointIdx == maxPoints) {
                     saveCsvFile(storedPointIdx);
@@ -342,6 +344,8 @@ public class JB4Connection {
 
     private void saveCsvFile(final int rows) {
         final DetailLogPoint[] tempPoints = new DetailLogPoint[rows];
+        final JB4SettingPoint settings = new JB4SettingPoint();
+        JB4SettingPoint.Copy(settingPoint, settings);
         System.arraycopy(storedPoints, 0, tempPoints, 0, rows);
         final StringBuilder raw = sb;
         new Thread(new Runnable() {
@@ -349,24 +353,44 @@ public class JB4Connection {
             public void run() {
                 StringBuilder sb = new StringBuilder();
                 sb.append(DetailLogPoint.getCsvHeader());
+
+                StringBuilder jb4log = new StringBuilder();
+                jb4log.append(JB4SettingPoint.getJB4Header(settings));
+
+                long startTime = tempPoints[0].timestamp;
+
                 for (int i = 0; i < rows; i++) {
                     sb.append(DetailLogPoint.getCsvString(tempPoints[i]));
+                    jb4log.append(DetailLogPoint.getJB4LogPointData(tempPoints[i], startTime));
                 }
                 File folder = new File(Environment.getExternalStorageDirectory() + "/Logs");
                 boolean var;
                 if (!folder.exists()) var = folder.mkdir();
                 String filename = folder.toString() + "/JB4U_LOG_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
                 String filename2 = folder.toString() + "/JB4U_RAW_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                String jb4logName = folder.toString() + "/JB4U_JB4Interface_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
                 try {
                     FileWriter fw = new FileWriter(filename2);
                     fw.write(raw.toString());
                     fw.flush();
                     fw.close();
-                    Toast("RAW Save successful.");
+                    Toast("RAW save successful.");
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Toast("Save unsuccessful.");
+                    Toast("RAW save unsuccessful.");
                 }
+
+                try {
+                    FileWriter fw = new FileWriter(jb4logName);
+                    fw.write(jb4log.toString());
+                    fw.flush();
+                    fw.close();
+                    Toast("JB4 save successful.");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast("JB4 save unsuccessful.");
+                }
+
                 try {
                     FileWriter fw = new FileWriter(filename);
                     fw.write(sb.toString());

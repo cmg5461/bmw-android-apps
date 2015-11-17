@@ -81,17 +81,17 @@ public class Transform {
 
     public static double bytes2IgnAdv(byte[] bytes) {
         double iga = convertByteArrayToDouble(bytes);
-        return iga > 50 ? 500D : iga / 10;
+        return iga > 500 ? 50D : iga / 10;
     }
 
     public static double bytes2AvgIgn(byte[] bytes) {
         double iga = convertByteArrayToDouble(bytes);
-        return iga > 50 ? 500D : iga / 10;
+        return iga > 500 ? 50D : iga / 10;
     }
 
     public static double bytes2AvgIgnDrop(byte[] bytes) {
         double iga = convertByteArrayToDouble(bytes);
-        return iga > 50 ? 500D : iga / 10;
+        return iga > 500 ? 50D : iga / 10;
     }
 
     public static double bytes2Dmebt(byte[] bytes) {
@@ -249,6 +249,14 @@ public class Transform {
 
     public static double bytes2Kr6(byte[] bytes) {
         return convertByteArrayToDouble(bytes) / 10;
+    }
+
+    public static double byte2cps_rpm(byte b, double scale) {
+        return Double.parseDouble(String.valueOf(b)) / scale;
+    }
+
+    public static int byte2cps_fuel(byte b) {
+        return Integer.parseInt(String.valueOf(b));
     }
 
     public static double convertByteArrayToDouble(byte[] bytes) {

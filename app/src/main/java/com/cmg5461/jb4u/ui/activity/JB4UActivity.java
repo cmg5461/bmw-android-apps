@@ -245,12 +245,12 @@ public class JB4UActivity extends Activity {
 
     private void updateUI() {
         if (connected) {
-            //sbFormat.format("%15.2f Psi", myService.getPoint().Boost);
-            boost.setText(String.format("%15.2f PSI", myService.getPoint().Boost));
+            //sbFormat.format("%15.2f Psi", myService.getPoint().boost);
+            boost.setText(String.format("%15.2f PSI", myService.getPoint().boost));
             //sbText.setLength(0);
-            //sbFormat.format("%15d Rpm", myService.getPoint().Rpm);
-            rpm.setText(String.format("%15s RPM", myService.getPoint().Rpm));
-            rpm_gauge.setTargetValue(myService.getPoint().Rpm);
+            //sbFormat.format("%15d rpm", myService.getPoint().rpm);
+            rpm.setText(String.format("%15s RPM", myService.getPoint().rpm));
+            rpm_gauge.setTargetValue(myService.getPoint().rpm);
             //sbText.setLength(0);
         }
     }
