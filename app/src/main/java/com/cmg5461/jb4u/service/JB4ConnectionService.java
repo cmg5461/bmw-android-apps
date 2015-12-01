@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.cmg5461.jb4u.data.Constants;
 import com.cmg5461.jb4u.log.DetailLogPoint;
+import com.cmg5461.jb4u.log.JB4SettingPoint;
 import com.cmg5461.jb4u.providers.JB4Connection;
 
 import java.util.concurrent.ExecutorService;
@@ -74,5 +75,13 @@ public class JB4ConnectionService extends Service {
 
     public DetailLogPoint getPoint() {
         return jb4Connection.getLogPoint();
+    }
+
+    public JB4SettingPoint getSettingPoint() {
+        return jb4Connection.getSettingPoint();
+    }
+
+    public int getLogIndex() {
+        return jb4Connection.getLogIndex();
     }
 }

@@ -71,7 +71,7 @@ public class JB4Connection {
     private DetailLogPoint logPoint = new DetailLogPoint(true);
     private JB4SettingPoint settingPoint = new JB4SettingPoint();
     private JB4Buffer buffer = new JB4Buffer(logPoint, settingPoint);
-    private int maxPoints = 10000;
+    private int maxPoints = 5000;
     private DetailLogPoint[] storedPoints = new DetailLogPoint[maxPoints];
     private int storedPointIdx = 0;
     private byte[] rxBuffer = new byte[512];
@@ -138,6 +138,8 @@ public class JB4Connection {
         for (int i = 0; i < maxPoints; i++) {
             storedPoints[i] = new DetailLogPoint();
         }
+        settingPoint.jb4interface = "JB4U";
+        settingPoint.motor = "N54 E Series";
     }
 
     public void Connect() {
@@ -407,6 +409,14 @@ public class JB4Connection {
 
     public DetailLogPoint getLogPoint() {
         return logPoint;
+    }
+
+    public JB4SettingPoint getSettingPoint() {
+        return settingPoint;
+    }
+
+    public int getLogIndex() {
+        return storedPointIdx;
     }
 
     public void setService(Service mService) {

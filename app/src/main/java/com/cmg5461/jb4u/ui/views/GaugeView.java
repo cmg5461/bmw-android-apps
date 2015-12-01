@@ -472,7 +472,7 @@ public class GaugeView extends View {
     public Paint getDefaultNeedleRightPaint() {
         final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(Color.rgb(227, 85, 35));
-        paint.setShadowLayer(0.01f, 0.005f, -0.005f, Color.argb(127, 0, 0, 0));
+        //paint.setShadowLayer(0.01f, 0.005f, -0.005f, Color.argb(127, 0, 0, 0));
         return paint;
     }
 
@@ -502,7 +502,7 @@ public class GaugeView extends View {
             mRangePaints[i].setTextSize(0.05f);
             mRangePaints[i].setTypeface(Typeface.SANS_SERIF);
             mRangePaints[i].setTextAlign(Align.CENTER);
-            mRangePaints[i].setShadowLayer(0.005f, 0.002f, 0.002f, mTextShadowColor);
+            //mRangePaints[i].setShadowLayer(0.005f, 0.002f, 0.002f, mTextShadowColor);
         }
     }
 
@@ -514,7 +514,7 @@ public class GaugeView extends View {
         paint.setTextSize(mTextValueSize);
         paint.setTextAlign(Align.CENTER);
         paint.setTypeface(Typeface.SANS_SERIF);
-        paint.setShadowLayer(0.01f, 0.002f, 0.002f, mTextShadowColor);
+        //paint.setShadowLayer(0.01f, 0.002f, 0.002f, mTextShadowColor);
         return paint;
     }
 
@@ -525,7 +525,7 @@ public class GaugeView extends View {
         paint.setStrokeWidth(0.005f);
         paint.setTextSize(mTextUnitSize);
         paint.setTextAlign(Align.CENTER);
-        paint.setShadowLayer(0.01f, 0.002f, 0.002f, mTextShadowColor);
+        //paint.setShadowLayer(0.01f, 0.002f, 0.002f, mTextShadowColor);
         return paint;
     }
 
@@ -800,12 +800,12 @@ public class GaugeView extends View {
     private void setNeedleShadowPosition(final float angle) {
         if (angle > 180 && angle < 360) {
             // Move shadow from right to left
-            mNeedleRightPaint.setShadowLayer(0, 0, 0, Color.BLACK);
-            mNeedleLeftPaint.setShadowLayer(0.01f, -0.005f, 0.005f, Color.argb(127, 0, 0, 0));
+            //mNeedleRightPaint.setShadowLayer(0, 0, 0, Color.BLACK);
+            //mNeedleLeftPaint.setShadowLayer(0.01f, -0.005f, 0.005f, Color.argb(127, 0, 0, 0));
         } else {
             // Move shadow from left to right
-            mNeedleLeftPaint.setShadowLayer(0, 0, 0, Color.BLACK);
-            mNeedleRightPaint.setShadowLayer(0.01f, 0.005f, -0.005f, Color.argb(127, 0, 0, 0));
+            //mNeedleLeftPaint.setShadowLayer(0, 0, 0, Color.BLACK);
+            //mNeedleRightPaint.setShadowLayer(0.01f, 0.005f, -0.005f, Color.argb(127, 0, 0, 0));
         }
     }
 

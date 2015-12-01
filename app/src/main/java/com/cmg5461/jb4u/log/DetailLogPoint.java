@@ -171,7 +171,7 @@ public class DetailLogPoint {
         sb.append(lp.ign_3).append(",");
         sb.append(lp.ign_4).append(",");
         sb.append(lp.ign_5).append(",");
-        sb.append(lp.ign_6).append("\n"); // jb4 log
+        sb.append(lp.ign_6).append("\r\n"); // jb4 log
         return sb.toString();
     }
 
@@ -218,7 +218,7 @@ public class DetailLogPoint {
         sb.append("N1MinGear,");
         sb.append("N1MaxGear,");
         sb.append("N1MinAfr,");
-        sb.append("N1MinAdv\n");
+        sb.append("N1MinAdv\r\n");
         return sb.toString();
     }
 
@@ -265,7 +265,7 @@ public class DetailLogPoint {
         sb.append(lp.N1MinGear).append(",");
         sb.append(lp.N1MaxGear).append(",");
         sb.append(lp.N1MinAfr).append(",");
-        sb.append(lp.N1MinAdv).append("\n"); // others
+        sb.append(lp.N1MinAdv).append("\r\n"); // others
         return sb.toString();
     }
 }

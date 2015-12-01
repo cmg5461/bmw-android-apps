@@ -21,8 +21,9 @@ import android.widget.TextView;
 
 import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
+import com.cmg5461.jb4u.log.DetailLogPoint;
+import com.cmg5461.jb4u.log.JB4SettingPoint;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
-import com.cmg5461.jb4u.ui.views.GaugeView;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,10 +36,31 @@ public class JB4UActivity extends Activity {
     private JB4ConnectionService myService;
     public ServiceConnection myConnection;
 
+    private DetailLogPoint displayDLPoint = new DetailLogPoint();
+    private JB4SettingPoint displaySettingPoint = new JB4SettingPoint();
     //private TextView console;
     private ImageButton connectButton;
     private TextView rpm;
     private TextView boost;
+    private TextView target;
+    private TextView iat;
+    private TextView afr;
+    private TextView afr2;
+    private TextView trims;
+    private TextView fp_l;
+    private TextView fp_h;
+    private TextView ign_1;
+    private TextView ign_2;
+    private TextView ign_3;
+    private TextView ign_4;
+    private TextView ign_5;
+    private TextView ign_6;
+
+    private TextView ff;
+    private TextView fol;
+    private TextView avg_ign;
+    private TextView map;
+    private TextView logLen;
 
     //private ScrollView scrollView;
 
@@ -51,11 +73,12 @@ public class JB4UActivity extends Activity {
     private ScheduledFuture updateFuture;
 
     private int loopDelay = 100;
+    private int logIndex = 0;
 
     //private StringBuilder sbText = new StringBuilder();
     //private Formatter sbFormat = new Formatter(sbText, Locale.US);
 
-    private GaugeView rpm_gauge;
+    //private GaugeView rpm_gauge;
 
     private NotificationManager mNM;
     private final int notificationID = 8675309;
@@ -142,7 +165,25 @@ public class JB4UActivity extends Activity {
     private void initializeComponents() {
         boost = (TextView) findViewById(R.id.textBoost);
         rpm = (TextView) findViewById(R.id.textRPM);
-        rpm_gauge = (GaugeView) findViewById(R.id.gaugeRPM);
+        //rpm_gauge = (GaugeView) findViewById(R.id.gaugeRPM);
+        target = (TextView) findViewById(R.id.textTarget);
+        iat = (TextView) findViewById(R.id.textIAT);
+        afr = (TextView) findViewById(R.id.textAFR1);
+        afr2 = (TextView) findViewById(R.id.textAFR2);
+        trims = (TextView) findViewById(R.id.textTrims);
+        fp_l = (TextView) findViewById(R.id.textFPL);
+        fp_h = (TextView) findViewById(R.id.textFPH);
+        ign_1 = (TextView) findViewById(R.id.textIgn1);
+        ign_2 = (TextView) findViewById(R.id.textIgn2);
+        ign_3 = (TextView) findViewById(R.id.textIgn3);
+        ign_4 = (TextView) findViewById(R.id.textIgn4);
+        ign_5 = (TextView) findViewById(R.id.textIgn5);
+        ign_6 = (TextView) findViewById(R.id.textIgn6);
+        ff = (TextView) findViewById(R.id.textFF);
+        fol = (TextView) findViewById(R.id.textFOL);
+        avg_ign = (TextView) findViewById(R.id.textAvgIgn);
+        map = (TextView) findViewById(R.id.textMap);
+        logLen = (TextView) findViewById(R.id.textLogLen);
 
         //scrollView = (ScrollView) findViewById(R.id.scrollView);
         //console = (TextView) findViewById(R.id.console);
@@ -246,12 +287,111 @@ public class JB4UActivity extends Activity {
     private void updateUI() {
         if (connected) {
             //sbFormat.format("%15.2f Psi", myService.getPoint().boost);
-            boost.setText(String.format("%15.2f PSI", myService.getPoint().boost));
-            //sbText.setLength(0);
-            //sbFormat.format("%15d rpm", myService.getPoint().rpm);
-            rpm.setText(String.format("%15s RPM", myService.getPoint().rpm));
-            rpm_gauge.setTargetValue(myService.getPoint().rpm);
-            //sbText.setLength(0);
+            DetailLogPoint lp = myService.getPoint();
+
+            if (lp.rpm != displayDLPoint.rpm) {
+                displayDLPoint.rpm = lp.rpm;
+                rpm.setText(String.format("%5s RPM", lp.rpm));
+                //rpm_gauge.setTargetValue(lp.rpm);
+            }
+
+            if (lp.boost != displayDLPoint.boost) {
+                displayDLPoint.boost = lp.boost;
+                boost.setText(String.format("%5.1f PSI", lp.boost));
+            }
+
+            if (lp.target != displayDLPoint.target) {
+                displayDLPoint.target = lp.target;
+                target.setText(String.format("%5.1f PSI", lp.target));
+            }
+
+            if (lp.iat != displayDLPoint.iat) {
+                displayDLPoint.iat = lp.iat;
+                iat.setText(String.format("%6.1f \u2103", lp.iat));
+            }
+
+            if (lp.afr != displayDLPoint.afr) {
+                displayDLPoint.afr = lp.afr;
+                afr.setText(String.format("%5.1f", lp.afr));
+            }
+
+            if (lp.afr2 != displayDLPoint.afr2) {
+                displayDLPoint.afr2 = lp.afr2;
+                afr2.setText(String.format("%5.1f", lp.afr2));
+            }
+
+            if (lp.trims != displayDLPoint.trims) {
+                displayDLPoint.trims = lp.trims;
+                trims.setText(String.format("%3s", lp.trims));
+            }
+
+            if (lp.fp_l != displayDLPoint.fp_l) {
+                displayDLPoint.fp_l = lp.fp_l;
+                fp_l.setText(String.format("%15s PSI", lp.fp_l));
+            }
+
+            if (lp.fp_h != displayDLPoint.fp_h) {
+                displayDLPoint.fp_h = lp.fp_h;
+                fp_h.setText(String.format("%3s - %4s PSI", lp.fp_h, lp.fp_h * 150));
+            }
+
+            if (lp.ign_1 != displayDLPoint.ign_1) {
+                displayDLPoint.ign_1 = lp.ign_1;
+                ign_1.setText(String.format("%4.1f", lp.ign_1));
+            }
+
+            if (lp.ign_2 != displayDLPoint.ign_2) {
+                displayDLPoint.ign_2 = lp.ign_2;
+                ign_2.setText(String.format("%4.1f", lp.ign_2));
+            }
+
+            if (lp.ign_3 != displayDLPoint.ign_3) {
+                displayDLPoint.ign_3 = lp.ign_3;
+                ign_3.setText(String.format("%4.1f", lp.ign_3));
+            }
+
+            if (lp.ign_4 != displayDLPoint.ign_4) {
+                displayDLPoint.ign_4 = lp.ign_4;
+                ign_4.setText(String.format("%4.1f", lp.ign_4));
+            }
+
+            if (lp.ign_5 != displayDLPoint.ign_5) {
+                displayDLPoint.ign_5 = lp.ign_5;
+                ign_5.setText(String.format("%4.1f", lp.ign_5));
+            }
+
+            if (lp.ign_6 != displayDLPoint.ign_6) {
+                displayDLPoint.ign_6 = lp.ign_6;
+                ign_6.setText(String.format("%4.1f", lp.ign_6));
+            }
+
+            // settings
+
+            JB4SettingPoint sp = myService.getSettingPoint();
+            if (lp.ff != displayDLPoint.ff) {
+                displayDLPoint.ff = lp.ff;
+                ff.setText(String.format("%4s", lp.ff));
+            }
+
+            if (sp.fuel_ol != displaySettingPoint.fuel_ol) {
+                displaySettingPoint.fuel_ol = sp.fuel_ol;
+                fol.setText(String.format("%4s", sp.fuel_ol));
+            }
+
+            if (lp.avg_ign != displayDLPoint.avg_ign) {
+                displayDLPoint.avg_ign = lp.avg_ign;
+                avg_ign.setText(String.format("%4.1f", lp.avg_ign));
+            }
+
+            if (lp.map != displayDLPoint.map) {
+                displayDLPoint.map = lp.map;
+                map.setText(String.format("%2s", lp.map));
+            }
+
+            if (logIndex != myService.getLogIndex()) {
+                logIndex = myService.getLogIndex();
+                logLen.setText(String.format("%5s/5000", logIndex));
+            }
         }
     }
 
