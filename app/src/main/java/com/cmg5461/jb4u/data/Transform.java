@@ -15,12 +15,12 @@ public class Transform {
         return convertByteArrayToDouble(bytes) / scale;
     }
 
-    public static double bytes2IAT(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2IAT(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
-    public static double bytes2Tps(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2Pedal(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static int bytes2Map(byte[] bytes) {
@@ -53,11 +53,19 @@ public class Transform {
         return convertByteArrayToDouble(bytes);
     }
 
-    public static double bytes2Meth(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2Meth(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
+    }
+
+    public static int bytes2FPL(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static double bytes2OilTemp(byte[] bytes) {
+        return convertByteArrayToDouble(bytes);
+    }
+
+    public static double bytes2WaterTemp(byte[] bytes) {
         return convertByteArrayToDouble(bytes);
     }
 
@@ -207,8 +215,8 @@ public class Transform {
         return convertByteArrayToDouble(bytes);
     }
 
-    public static double bytes2Accel(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2Throttle(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static double bytes2N1MinGear(byte[] bytes) {

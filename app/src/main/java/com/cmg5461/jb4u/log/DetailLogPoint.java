@@ -5,10 +5,10 @@ package com.cmg5461.jb4u.log;
  */
 public class DetailLogPoint {
     public long timestamp;
-    public double iat;
+    public int iat;
     public int rpm;
     public double boost;
-    public double pedal; // pedal
+    public int pedal; // pedal
     public int map;
     public int clock; // timestamp
     public int pwm;
@@ -16,8 +16,8 @@ public class DetailLogPoint {
     public double trims;
     public int gear;
     public double dutycycle;
-    public double meth;
-    public double fp_l;
+    public int meth;
+    public int fp_l;
     public int ff;
     public double afr;
     public double ecu_psi; // ECU psi
@@ -37,7 +37,7 @@ public class DetailLogPoint {
     public double N1MinRpm;
     public double N1MaxRpm;
     public double N1RampRate;
-    public double throttle;
+    public int throttle;
     public double N1MaxGear;
     public double N1MinAfr;
     public double N1MinAdv;
@@ -46,6 +46,8 @@ public class DetailLogPoint {
     public double ign_4;
     public double ign_5;
     public double ign_6;
+    public double waterTemp;
+    public double oilTemp;
 
     public DetailLogPoint() {
     }
@@ -54,8 +56,8 @@ public class DetailLogPoint {
         timestamp = 0L;
         rpm = -1;
         boost = 0.0D;
-        pedal = 0.0D;
-        iat = 0.0D;
+        pedal = -1;
+        iat = -1;
         map = -1;
         clock = -1;
         pwm = -1;
@@ -63,8 +65,8 @@ public class DetailLogPoint {
         trims = 0.0D;
         gear = -1;
         dutycycle = 0.0D;
-        meth = 0.0D;
-        fp_l = 0.0D;
+        meth = -1;
+        fp_l = -1;
         ff = -1;
         afr = 0.0D;
         ecu_psi = 0.0D;
@@ -82,7 +84,7 @@ public class DetailLogPoint {
         CpsSafety = 0.0D;
         load = 0.0D;
         last_safety = 0.0D;
-        throttle = 0.0D;
+        throttle = -1;
         N1MinGear = 0.0D;
         N1MaxGear = 0.0D;
         N1MinAfr = 0.0D;
@@ -93,6 +95,8 @@ public class DetailLogPoint {
         ign_4 = 0.0D;
         ign_5 = 0.0D;
         ign_6 = 0.0D;
+        waterTemp = 0.0D;
+        oilTemp = 0.0D;
     }
 
     public static void Copy(DetailLogPoint in, DetailLogPoint out) {
@@ -138,6 +142,8 @@ public class DetailLogPoint {
         out.ign_4 = in.ign_4;
         out.ign_5 = in.ign_5;
         out.ign_6 = in.ign_6;
+        out.waterTemp = in.waterTemp;
+        out.oilTemp = in.oilTemp;
     }
 
     public static String getJB4LogPointData(DetailLogPoint lp, long startTime) {
@@ -171,7 +177,7 @@ public class DetailLogPoint {
         sb.append(lp.ign_3).append(",");
         sb.append(lp.ign_4).append(",");
         sb.append(lp.ign_5).append(",");
-        sb.append(lp.ign_6).append("\r\n"); // jb4 log
+        sb.append(lp.ign_6).append(",\r\n"); // jb4 log
         return sb.toString();
     }
 
@@ -218,7 +224,9 @@ public class DetailLogPoint {
         sb.append("N1MinGear,");
         sb.append("N1MaxGear,");
         sb.append("N1MinAfr,");
-        sb.append("N1MinAdv\r\n");
+        sb.append("N1MinAdv,\r\n");
+        sb.append("WaterTemp,\r\n");
+        sb.append("OilTemp,\r\n");
         return sb.toString();
     }
 
@@ -265,7 +273,9 @@ public class DetailLogPoint {
         sb.append(lp.N1MinGear).append(",");
         sb.append(lp.N1MaxGear).append(",");
         sb.append(lp.N1MinAfr).append(",");
-        sb.append(lp.N1MinAdv).append("\r\n"); // others
+        sb.append(lp.N1MinAdv).append(",");
+        sb.append(lp.waterTemp).append(",");
+        sb.append(lp.oilTemp).append(",\r\n"); // others
         return sb.toString();
     }
 }

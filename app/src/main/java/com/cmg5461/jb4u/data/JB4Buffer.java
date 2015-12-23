@@ -89,7 +89,7 @@ public class JB4Buffer {
                 logPoint.last_safety = Transform.bytes2LearnedFF(bytes);
                 break;
             case FP_LOW:
-                logPoint.fp_l = Transform.bytes2OilTemp(bytes);
+                logPoint.fp_l = Transform.bytes2FPL(bytes);
                 break;
             case METH:
                 logPoint.meth = Transform.bytes2Meth(bytes);
@@ -128,7 +128,7 @@ public class JB4Buffer {
                 logPoint.boost = Transform.bytes2Boost(bytes, scale);
                 break;
             case PEDAL:
-                logPoint.pedal = Transform.bytes2Tps(bytes);
+                logPoint.pedal = Transform.bytes2Pedal(bytes);
                 break;
             case PWM:
                 logPoint.pwm = Transform.bytes2Pwm(bytes);
@@ -188,7 +188,7 @@ public class JB4Buffer {
                 logPoint.N1ShiftRed = Transform.bytes2N1ShiftRed(bytes);
                 break;
             case THROTTLE:
-                logPoint.throttle = Transform.bytes2Accel(bytes);
+                logPoint.throttle = Transform.bytes2Throttle(bytes);
                 break;
             case FP_HIGH:
                 logPoint.fp_h = Transform.bytes2FuelPressure(bytes);
@@ -293,6 +293,12 @@ public class JB4Buffer {
                 logPoint.afr2 = Transform.bytes2Kr1(bytes);
                 break;
             case END_OF_LINE:
+                break;
+            case OIL_TEMP:
+                logPoint.oilTemp = Transform.bytes2OilTemp(bytes);
+                break;
+            case WATER_TEMP:
+                logPoint.waterTemp = Transform.bytes2WaterTemp(bytes);
                 break;
         }
     }

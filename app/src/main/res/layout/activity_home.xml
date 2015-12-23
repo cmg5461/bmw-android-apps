@@ -14,7 +14,8 @@
         android:orientation="horizontal"
         android:paddingBottom="20dp"
         android:longClickable="true"
-        android:focusableInTouchMode="true">
+        android:focusableInTouchMode="true"
+        android:baselineAligned="false">
 
         <LinearLayout
             android:layout_width="fill_parent"
@@ -283,6 +284,51 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/textView13"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="WaterT: "
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="30sp"
+            android:layout_weight=".35"
+            android:gravity="right" />
+
+        <TextView
+            android:id="@+id/textWaterTemp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="30sp"
+            android:layout_weight=".2" />
+
+        <TextView
+            android:id="@+id/textView20"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="OilT: "
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="30sp"
+            android:layout_weight=".2"
+            android:gravity="right" />
+
+        <TextView
+            android:id="@+id/textOilTemp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="30sp"
+            android:layout_weight=".25"
+            android:layout_gravity="right" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
             android:id="@+id/textView14"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -299,7 +345,7 @@
             android:text="0"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textSize="30sp"
-            android:layout_weight=".15" />
+            android:layout_weight=".2" />
 
         <TextView
             android:id="@+id/textView15"
@@ -308,7 +354,7 @@
             android:text="FOL: "
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textSize="30sp"
-            android:layout_weight=".25"
+            android:layout_weight=".2"
             android:gravity="right" />
 
         <TextView
@@ -361,7 +407,7 @@
             android:text="0"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textSize="30sp"
-            android:layout_weight=".15" />
+            android:layout_weight=".2" />
 
         <TextView
             android:id="@+id/textView16"
@@ -370,7 +416,7 @@
             android:text="Map: "
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textSize="30sp"
-            android:layout_weight=".25"
+            android:layout_weight=".2"
             android:gravity="right" />
 
         <TextView

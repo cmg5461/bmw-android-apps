@@ -137,7 +137,7 @@ public class JB4SettingPoint {
         sb.append("MethSafeMode,");
         sb.append("MethAdd,");
         sb.append("MethScale,");
-        sb.append("MethPSI\r\n");
+        sb.append("MethPSI,\r\n");
         sb.append(lp.firmware).append(",");
         sb.append(lp.jb4interface).append(",");
         sb.append(lp.motor).append(",");
@@ -149,7 +149,7 @@ public class JB4SettingPoint {
         sb.append(lp.methsafemode).append(",");
         sb.append(lp.methadd).append(",");
         sb.append(lp.methscale).append(",");
-        sb.append(lp.methpsi).append("\r\n"); // first line
+        sb.append(lp.methpsi).append(",\r\n"); // first line
         sb.append("BoostSafety,");
         sb.append("PID Gain,");
         sb.append("AutoShiftRed,");
@@ -161,7 +161,7 @@ public class JB4SettingPoint {
         sb.append("FUD,");
         sb.append("N20_Tmap,");
         sb.append("6CylMode,");
-        sb.append("LastSafety\r\n");
+        sb.append("LastSafety,\r\n");
         sb.append(lp.boost_safety).append(",");
         sb.append(lp.pid_gain).append(",");
         sb.append(lp.auto_shift_red).append(",");
@@ -173,7 +173,7 @@ public class JB4SettingPoint {
         sb.append(lp.fud).append(",");
         sb.append(lp.N20_Tmap).append(',');
         sb.append(lp.mode6cyl).append(",");
-        sb.append(lp.last_safety).append("\r\n");
+        sb.append(lp.last_safety).append(",\r\n");
         sb.append("timestamp,");
         sb.append("rpm,");
         sb.append("ecu_psi,");
@@ -203,7 +203,7 @@ public class JB4SettingPoint {
         sb.append("ign_3,");
         sb.append("ign_4,");
         sb.append("ign_5,");
-        sb.append("ign_6\r\n"); // jb4 log
+        sb.append("ign_6,\r\n"); // jb4 log
         return sb.toString();
     }
 

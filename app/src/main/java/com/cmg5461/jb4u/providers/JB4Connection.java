@@ -17,7 +17,7 @@ import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.FT_Device;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -65,7 +65,7 @@ public class JB4Connection {
     private final int commandDelayInterval = 100; // ms
     private final int testInterval = 25;
 
-    private StringBuilder sb = new StringBuilder();
+    //private StringBuilder sb = new StringBuilder();
 
     // buffer vars
     private DetailLogPoint logPoint = new DetailLogPoint(true);
@@ -210,12 +210,12 @@ public class JB4Connection {
             heartbeatLoopFuture.cancel(true);
         if (readLoopFuture != null && !readLoopFuture.isCancelled()) readLoopFuture.cancel(true);
         if (testLoopFuture != null && !testLoopFuture.isCancelled()) testLoopFuture.cancel(true);
-        if (ftdev == null || !ftdev.isOpen()) return;
         if (storedPointIdx > 0) {
             saveCsvFile(storedPointIdx);
             storedPointIdx = 0;
         }
         logging = false;
+        if (ftdev == null || !ftdev.isOpen()) return;
         try {
             Thread.sleep(1500);
         } catch (InterruptedException e) {
@@ -302,9 +302,9 @@ public class JB4Connection {
         if (r > 0) {
             ftdev.read(rxBuffer, r);
             byte[] rx = Arrays.copyOfRange(rxBuffer, 0, r);
-            sb.append(System.currentTimeMillis());
-            for (int i = 0; i < r; i++) sb.append(',').append(rx[i]);
-            sb.append('\n');
+            //sb.append(System.currentTimeMillis());
+            //for (int i = 0; i < r; i++) sb.append(',').append(rx[i]);
+            //sb.append("\r\n");
             //Constants.LogD("DATA RX: " + Arrays.toString(rx));
             buffer.AddBytes(rx);
             buffer.ParseBuffer();
@@ -349,7 +349,6 @@ public class JB4Connection {
         final JB4SettingPoint settings = new JB4SettingPoint();
         JB4SettingPoint.Copy(settingPoint, settings);
         System.arraycopy(storedPoints, 0, tempPoints, 0, rows);
-        final StringBuilder raw = sb;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -369,24 +368,15 @@ public class JB4Connection {
                 boolean var;
                 if (!folder.exists()) var = folder.mkdir();
                 String filename = folder.toString() + "/JB4U_LOG_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
-                String filename2 = folder.toString() + "/JB4U_RAW_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
                 String jb4logName = folder.toString() + "/JB4U_JB4Interface_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
-                try {
-                    FileWriter fw = new FileWriter(filename2);
-                    fw.write(raw.toString());
-                    fw.flush();
-                    fw.close();
-                    Toast("RAW save successful.");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast("RAW save unsuccessful.");
-                }
 
                 try {
-                    FileWriter fw = new FileWriter(jb4logName);
-                    fw.write(jb4log.toString());
-                    fw.flush();
-                    fw.close();
+                    FileOutputStream fos = new FileOutputStream(jb4logName);
+                    fos.write(JB4SettingPoint.getJB4Header(settings).getBytes());
+                    for (int i = 0; i < rows; i++)
+                        fos.write(DetailLogPoint.getJB4LogPointData(tempPoints[i], startTime).getBytes());
+                    fos.flush();
+                    fos.close();
                     Toast("JB4 save successful.");
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -394,10 +384,12 @@ public class JB4Connection {
                 }
 
                 try {
-                    FileWriter fw = new FileWriter(filename);
-                    fw.write(sb.toString());
-                    fw.flush();
-                    fw.close();
+                    FileOutputStream fos = new FileOutputStream(filename);
+                    fos.write(DetailLogPoint.getCsvHeader().getBytes());
+                    for (int i = 0; i < rows; i++)
+                        fos.write(DetailLogPoint.getCsvString(tempPoints[i]).getBytes());
+                    fos.flush();
+                    fos.close();
                     Toast("Save successful.");
                 } catch (IOException e) {
                     e.printStackTrace();

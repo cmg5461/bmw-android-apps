@@ -55,6 +55,8 @@ public class JB4UActivity extends Activity {
     private TextView ign_4;
     private TextView ign_5;
     private TextView ign_6;
+    private TextView waterTemp;
+    private TextView oilTemp;
 
     private TextView ff;
     private TextView fol;
@@ -179,6 +181,8 @@ public class JB4UActivity extends Activity {
         ign_4 = (TextView) findViewById(R.id.textIgn4);
         ign_5 = (TextView) findViewById(R.id.textIgn5);
         ign_6 = (TextView) findViewById(R.id.textIgn6);
+        waterTemp = (TextView) findViewById(R.id.textWaterTemp);
+        oilTemp = (TextView) findViewById(R.id.textOilTemp);
         ff = (TextView) findViewById(R.id.textFF);
         fol = (TextView) findViewById(R.id.textFOL);
         avg_ign = (TextView) findViewById(R.id.textAvgIgn);
@@ -307,7 +311,7 @@ public class JB4UActivity extends Activity {
 
             if (lp.iat != displayDLPoint.iat) {
                 displayDLPoint.iat = lp.iat;
-                iat.setText(String.format("%6.1f \u2103", lp.iat));
+                iat.setText(String.format("%4d \u2109", lp.iat));
             }
 
             if (lp.afr != displayDLPoint.afr) {
@@ -327,12 +331,12 @@ public class JB4UActivity extends Activity {
 
             if (lp.fp_l != displayDLPoint.fp_l) {
                 displayDLPoint.fp_l = lp.fp_l;
-                fp_l.setText(String.format("%15s PSI", lp.fp_l));
+                fp_l.setText(String.format("%3d PSI", (int) lp.fp_l));
             }
 
             if (lp.fp_h != displayDLPoint.fp_h) {
                 displayDLPoint.fp_h = lp.fp_h;
-                fp_h.setText(String.format("%3s - %4s PSI", lp.fp_h, lp.fp_h * 150));
+                fp_h.setText(String.format("%3d", (int) lp.fp_h));
             }
 
             if (lp.ign_1 != displayDLPoint.ign_1) {
@@ -365,12 +369,22 @@ public class JB4UActivity extends Activity {
                 ign_6.setText(String.format("%4.1f", lp.ign_6));
             }
 
+            if (lp.waterTemp != displayDLPoint.waterTemp) {
+                displayDLPoint.waterTemp = lp.waterTemp;
+                waterTemp.setText(String.format("%4.1f", lp.waterTemp));
+            }
+
+            if (lp.oilTemp != displayDLPoint.oilTemp) {
+                displayDLPoint.oilTemp = lp.oilTemp;
+                oilTemp.setText(String.format("%4.1f", lp.oilTemp));
+            }
+
             // settings
 
             JB4SettingPoint sp = myService.getSettingPoint();
             if (lp.ff != displayDLPoint.ff) {
-                displayDLPoint.ff = lp.ff;
-                ff.setText(String.format("%4s", lp.ff));
+                displaySettingPoint.FF = sp.FF;
+                ff.setText(String.format("%4s", sp.FF));
             }
 
             if (sp.fuel_ol != displaySettingPoint.fuel_ol) {
