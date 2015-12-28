@@ -3,7 +3,7 @@ package com.cmg5461.jb4u.log;
 /**
  * Created by Chris on 11/10/2015.
  */
-public class DetailLogPoint {
+public class LogPoint {
     public long timestamp;
     public int iat;
     public int rpm;
@@ -13,7 +13,7 @@ public class DetailLogPoint {
     public int clock; // timestamp
     public int pwm;
     public int fuelen; // fuelen
-    public double trims;
+    public int trims;
     public int gear;
     public double dutycycle;
     public int meth;
@@ -21,12 +21,10 @@ public class DetailLogPoint {
     public int ff;
     public double afr;
     public double ecu_psi; // ECU psi
-    public double ign_1;
     public double avg_ign;
     public double dme_bt; // ecu boost target
     public double target; // real target
     public double N1Enabled;
-    public double ign_3;
     public double last_safety;
     public double N1MinGear;
     public double fp_h;
@@ -42,17 +40,19 @@ public class DetailLogPoint {
     public double N1MinAfr;
     public double N1MinAdv;
     public double afr2;
+    public double ign_1;
     public double ign_2;
+    public double ign_3;
     public double ign_4;
     public double ign_5;
     public double ign_6;
-    public double waterTemp;
-    public double oilTemp;
+    public int waterTemp;
+    public int oilTemp;
 
-    public DetailLogPoint() {
+    public LogPoint() {
     }
 
-    public DetailLogPoint(boolean populate) {
+    public LogPoint(boolean populate) {
         timestamp = 0L;
         rpm = -1;
         boost = 0.0D;
@@ -62,7 +62,7 @@ public class DetailLogPoint {
         clock = -1;
         pwm = -1;
         fuelen = -1;
-        trims = 0.0D;
+        trims = -1;
         gear = -1;
         dutycycle = 0.0D;
         meth = -1;
@@ -95,11 +95,60 @@ public class DetailLogPoint {
         ign_4 = 0.0D;
         ign_5 = 0.0D;
         ign_6 = 0.0D;
-        waterTemp = 0.0D;
-        oilTemp = 0.0D;
+        waterTemp = -1;
+        oilTemp = -1;
     }
 
-    public static void Copy(DetailLogPoint in, DetailLogPoint out) {
+    public static LogPoint clone(LogPoint in) {
+        LogPoint out = new LogPoint();
+        out.timestamp = in.timestamp;
+        out.rpm = in.rpm;
+        out.boost = in.boost;
+        out.pedal = in.pedal;
+        out.iat = in.iat;
+        out.map = in.map;
+        out.clock = in.clock;
+        out.pwm = in.pwm;
+        out.fuelen = in.fuelen;
+        out.trims = in.trims;
+        out.gear = in.gear;
+        out.dutycycle = in.dutycycle;
+        out.meth = in.meth;
+        out.fp_l = in.fp_l;
+        out.ff = in.ff;
+        out.afr = in.afr;
+        out.ecu_psi = in.ecu_psi;
+        out.ign_1 = in.ign_1;
+        out.avg_ign = in.avg_ign;
+        out.dme_bt = in.dme_bt;
+        out.target = in.target;
+        out.fp_h = in.fp_h;
+        out.N1Enabled = in.N1Enabled;
+        out.N1MethFlow = in.N1MethFlow;
+        out.N1MinRpm = in.N1MinRpm;
+        out.N1MaxRpm = in.N1MaxRpm;
+        out.N1RampRate = in.N1RampRate;
+        out.N1ShiftRed = in.N1ShiftRed;
+        out.CpsSafety = in.CpsSafety;
+        out.load = in.load;
+        out.last_safety = in.last_safety;
+        out.throttle = in.throttle;
+        out.N1MinGear = in.N1MinGear;
+        out.N1MaxGear = in.N1MaxGear;
+        out.N1MinAfr = in.N1MinAfr;
+        out.N1MinAdv = in.N1MinAdv;
+        out.afr2 = in.afr2;
+        out.ign_2 = in.ign_2;
+        out.ign_3 = in.ign_3;
+        out.ign_4 = in.ign_4;
+        out.ign_5 = in.ign_5;
+        out.ign_6 = in.ign_6;
+        out.waterTemp = in.waterTemp;
+        out.oilTemp = in.oilTemp;
+        return out;
+    }
+
+    public static void Copy(LogPoint in, LogPoint out) {
         out.timestamp = in.timestamp;
         out.rpm = in.rpm;
         out.boost = in.boost;
@@ -146,7 +195,7 @@ public class DetailLogPoint {
         out.oilTemp = in.oilTemp;
     }
 
-    public static String getJB4LogPointData(DetailLogPoint lp, long startTime) {
+    public static String getJB4LogPointData(LogPoint lp, long startTime) {
         StringBuilder sb = new StringBuilder();
         sb.append((lp.timestamp - startTime) / 100D).append(",");
         sb.append(lp.rpm).append(",");
@@ -224,13 +273,13 @@ public class DetailLogPoint {
         sb.append("N1MinGear,");
         sb.append("N1MaxGear,");
         sb.append("N1MinAfr,");
-        sb.append("N1MinAdv,\r\n");
-        sb.append("WaterTemp,\r\n");
-        sb.append("OilTemp,\r\n");
+        sb.append("N1MinAdv,");
+        sb.append("WaterTemp,");
+        sb.append("OilTemp\r\n");
         return sb.toString();
     }
 
-    public static String getCsvString(DetailLogPoint lp) {
+    public static String getCsvString(LogPoint lp) {
         StringBuilder sb = new StringBuilder();
         sb.append(lp.timestamp).append(",");
         sb.append(lp.rpm).append(",");

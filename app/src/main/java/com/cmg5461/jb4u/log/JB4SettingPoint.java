@@ -12,7 +12,7 @@ public class JB4SettingPoint {
     public double avgign;
     public double dwp;
     public double methtriggermode;
-    public double FF;
+    public int FF;
     public double methsafemode;
     public double methadd;
     public double methscale;
@@ -21,7 +21,7 @@ public class JB4SettingPoint {
     public double boost_safety;
     public double pid_gain;
     public double auto_shift_red;
-    public double fuel_ol;
+    public int fuel_ol;
     public double fua;
     public double limit_1st;
     public double limit_2nd;
@@ -149,7 +149,7 @@ public class JB4SettingPoint {
         sb.append(lp.methsafemode).append(",");
         sb.append(lp.methadd).append(",");
         sb.append(lp.methscale).append(",");
-        sb.append(lp.methpsi).append(",\r\n"); // first line
+        sb.append(lp.methpsi).append("\r\n"); // first line
         sb.append("BoostSafety,");
         sb.append("PID Gain,");
         sb.append("AutoShiftRed,");
@@ -161,7 +161,7 @@ public class JB4SettingPoint {
         sb.append("FUD,");
         sb.append("N20_Tmap,");
         sb.append("6CylMode,");
-        sb.append("LastSafety,\r\n");
+        sb.append("LastSafety\r\n");
         sb.append(lp.boost_safety).append(",");
         sb.append(lp.pid_gain).append(",");
         sb.append(lp.auto_shift_red).append(",");
@@ -173,7 +173,7 @@ public class JB4SettingPoint {
         sb.append(lp.fud).append(",");
         sb.append(lp.N20_Tmap).append(',');
         sb.append(lp.mode6cyl).append(",");
-        sb.append(lp.last_safety).append(",\r\n");
+        sb.append(lp.last_safety).append("\r\n");
         sb.append("timestamp,");
         sb.append("rpm,");
         sb.append("ecu_psi,");
@@ -203,8 +203,70 @@ public class JB4SettingPoint {
         sb.append("ign_3,");
         sb.append("ign_4,");
         sb.append("ign_5,");
-        sb.append("ign_6,\r\n"); // jb4 log
+        sb.append("ign_6\r\n"); // jb4 log
         return sb.toString();
+    }
+
+    public static JB4SettingPoint clone(JB4SettingPoint in) {
+        JB4SettingPoint out = new JB4SettingPoint();
+        out.firmware = in.firmware;
+        out.jb4interface = in.jb4interface;
+        out.motor = in.motor;
+        out.tmap_v = in.tmap_v;
+        out.avgign = in.avgign;
+        out.dwp = in.dwp;
+        out.methtriggermode = in.methtriggermode;
+        out.FF = in.FF;
+        out.methsafemode = in.methsafemode;
+        out.methadd = in.methadd;
+        out.methscale = in.methscale;
+        out.methpsi = in.methpsi;
+        out.boost_safety = in.boost_safety;
+        out.pid_gain = in.pid_gain;
+        out.auto_shift_red = in.auto_shift_red;
+        out.fuel_ol = in.fuel_ol;
+        out.fua = in.fua;
+        out.limit_1st = in.limit_1st;
+        out.limit_2nd = in.limit_2nd;
+        out.limit_3rd = in.limit_3rd;
+        out.fud = in.fud;
+        out.N20_Tmap = in.N20_Tmap;
+        out.mode6cyl = in.mode6cyl;
+        out.last_safety = in.last_safety;
+        out.rpm1500 = in.rpm1500;
+        out.rpm2000 = in.rpm2000;
+        out.rpm2500 = in.rpm2500;
+        out.rpm3000 = in.rpm3000;
+        out.rpm3500 = in.rpm3500;
+        out.rpm4000 = in.rpm4000;
+        out.rpm4500 = in.rpm4500;
+        out.rpm5000 = in.rpm5000;
+        out.rpm5500 = in.rpm5500;
+        out.rpm6000 = in.rpm6000;
+        out.rpm6500 = in.rpm6500;
+        out.rpm7000 = in.rpm7000;
+        out.fuel2500 = in.fuel2500;
+        out.fuel3000 = in.fuel3000;
+        out.fuel3500 = in.fuel3500;
+        out.fuel4000 = in.fuel4000;
+        out.fuel4500 = in.fuel4500;
+        out.fuel5000 = in.fuel5000;
+        out.fuel5500 = in.fuel5500;
+        out.fuel6000 = in.fuel6000;
+        out.fuel6500 = in.fuel6500;
+        out.cps1500 = in.cps1500;
+        out.cps2000 = in.cps2000;
+        out.cps2500 = in.cps2500;
+        out.cps3000 = in.cps3000;
+        out.cps3500 = in.cps3500;
+        out.cps4000 = in.cps4000;
+        out.cps4500 = in.cps4500;
+        out.cps5000 = in.cps5000;
+        out.cps5500 = in.cps5500;
+        out.cps6000 = in.cps6000;
+        out.cps6500 = in.cps6500;
+        out.cps7000 = in.cps7000;
+        return out;
     }
 
     public static void Copy(JB4SettingPoint in, JB4SettingPoint out) {

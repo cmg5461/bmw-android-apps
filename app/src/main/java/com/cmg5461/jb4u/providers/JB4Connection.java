@@ -11,7 +11,7 @@ import android.widget.Toast;
 import com.cmg5461.jb4u.data.Constants;
 import com.cmg5461.jb4u.data.JB4Buffer;
 import com.cmg5461.jb4u.data.JB4Command;
-import com.cmg5461.jb4u.log.DetailLogPoint;
+import com.cmg5461.jb4u.log.LogPoint;
 import com.cmg5461.jb4u.log.JB4SettingPoint;
 import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.FT_Device;
@@ -68,11 +68,12 @@ public class JB4Connection {
     //private StringBuilder sb = new StringBuilder();
 
     // buffer vars
-    private DetailLogPoint logPoint = new DetailLogPoint(true);
+    private LogPoint logPoint = new LogPoint(true);
+    private LogPoint lastLogPoint = new LogPoint(true);
     private JB4SettingPoint settingPoint = new JB4SettingPoint();
     private JB4Buffer buffer = new JB4Buffer(logPoint, settingPoint);
     private int maxPoints = 5000;
-    private DetailLogPoint[] storedPoints = new DetailLogPoint[maxPoints];
+    private LogPoint[] storedPoints = new LogPoint[maxPoints];
     private int storedPointIdx = 0;
     private byte[] rxBuffer = new byte[512];
 
@@ -113,7 +114,6 @@ public class JB4Connection {
                 try {
                     if (logging && ftdev != null && ftdev.isOpen()) {
                         parseData();
-                        buffer.updateTimestamp();
                     }
                 } catch (Throwable t) {
                     Log.e(Constants.TAG, "readRunnable ERROR", t);
@@ -136,7 +136,7 @@ public class JB4Connection {
             rxBuffer[i] = -1;
         }
         for (int i = 0; i < maxPoints; i++) {
-            storedPoints[i] = new DetailLogPoint();
+            storedPoints[i] = new LogPoint();
         }
         settingPoint.jb4interface = "JB4U";
         settingPoint.motor = "N54 E Series";
@@ -308,8 +308,10 @@ public class JB4Connection {
             //Constants.LogD("DATA RX: " + Arrays.toString(rx));
             buffer.AddBytes(rx);
             buffer.ParseBuffer();
-            if (storedPointIdx - 1 < 0 || logPoint.rpm < 1 || logPoint.rpm != storedPoints[storedPointIdx - 1].rpm || logPoint.boost != storedPoints[storedPointIdx - 1].boost) {
-                DetailLogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
+            if (System.currentTimeMillis() - lastLogPoint.timestamp > 99 || logPoint.rpm < 1 || logPoint.rpm != lastLogPoint.rpm || logPoint.boost != lastLogPoint.boost) {
+                LogPoint.Copy(logPoint, lastLogPoint);
+                buffer.updateTimestamp();
+                LogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
                 if (storedPointIdx == maxPoints) {
                     saveCsvFile(storedPointIdx);
                     storedPointIdx = 0;
@@ -345,25 +347,13 @@ public class JB4Connection {
     }
 
     private void saveCsvFile(final int rows) {
-        final DetailLogPoint[] tempPoints = new DetailLogPoint[rows];
-        final JB4SettingPoint settings = new JB4SettingPoint();
-        JB4SettingPoint.Copy(settingPoint, settings);
-        System.arraycopy(storedPoints, 0, tempPoints, 0, rows);
+        final LogPoint[] tempPoints = new LogPoint[rows];
+        final JB4SettingPoint settings = JB4SettingPoint.clone(settingPoint);
+        for (int i = 0; i < rows; i++) tempPoints[i] = LogPoint.clone(storedPoints[i]);
         new Thread(new Runnable() {
             @Override
             public void run() {
-                StringBuilder sb = new StringBuilder();
-                sb.append(DetailLogPoint.getCsvHeader());
-
-                StringBuilder jb4log = new StringBuilder();
-                jb4log.append(JB4SettingPoint.getJB4Header(settings));
-
                 long startTime = tempPoints[0].timestamp;
-
-                for (int i = 0; i < rows; i++) {
-                    sb.append(DetailLogPoint.getCsvString(tempPoints[i]));
-                    jb4log.append(DetailLogPoint.getJB4LogPointData(tempPoints[i], startTime));
-                }
                 File folder = new File(Environment.getExternalStorageDirectory() + "/Logs");
                 boolean var;
                 if (!folder.exists()) var = folder.mkdir();
@@ -374,7 +364,7 @@ public class JB4Connection {
                     FileOutputStream fos = new FileOutputStream(jb4logName);
                     fos.write(JB4SettingPoint.getJB4Header(settings).getBytes());
                     for (int i = 0; i < rows; i++)
-                        fos.write(DetailLogPoint.getJB4LogPointData(tempPoints[i], startTime).getBytes());
+                        fos.write(LogPoint.getJB4LogPointData(tempPoints[i], startTime).getBytes());
                     fos.flush();
                     fos.close();
                     Toast("JB4 save successful.");
@@ -385,9 +375,9 @@ public class JB4Connection {
 
                 try {
                     FileOutputStream fos = new FileOutputStream(filename);
-                    fos.write(DetailLogPoint.getCsvHeader().getBytes());
+                    fos.write(LogPoint.getCsvHeader().getBytes());
                     for (int i = 0; i < rows; i++)
-                        fos.write(DetailLogPoint.getCsvString(tempPoints[i]).getBytes());
+                        fos.write(LogPoint.getCsvString(tempPoints[i]).getBytes());
                     fos.flush();
                     fos.close();
                     Toast("Save successful.");
@@ -399,7 +389,7 @@ public class JB4Connection {
         }).start();
     }
 
-    public DetailLogPoint getLogPoint() {
+    public LogPoint getLogPoint() {
         return logPoint;
     }
 

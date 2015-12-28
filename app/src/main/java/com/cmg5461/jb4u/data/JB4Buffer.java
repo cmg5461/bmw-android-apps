@@ -1,6 +1,6 @@
 package com.cmg5461.jb4u.data;
 
-import com.cmg5461.jb4u.log.DetailLogPoint;
+import com.cmg5461.jb4u.log.LogPoint;
 import com.cmg5461.jb4u.log.JB4SettingPoint;
 
 /**
@@ -8,7 +8,7 @@ import com.cmg5461.jb4u.log.JB4SettingPoint;
  */
 public class JB4Buffer {
     private final JB4SettingPoint settingPoint;
-    private DetailLogPoint logPoint;
+    private LogPoint logPoint;
     private int byte_counter = 0;
     private int byte_counter_end = 0;
     private int bufferSize = 2000;
@@ -16,7 +16,7 @@ public class JB4Buffer {
     private byte[] byteIN = new byte[bufferSize];
     private byte[] tempBuffer = new byte[100];
 
-    public JB4Buffer(DetailLogPoint logPoint, JB4SettingPoint settingPoint) {
+    public JB4Buffer(LogPoint logPoint, JB4SettingPoint settingPoint) {
         this.logPoint = logPoint;
         this.settingPoint = settingPoint;
         for (int i = 0; i < bufferSize; i++) byteIN[i] = 46;
@@ -307,7 +307,7 @@ public class JB4Buffer {
         logPoint.timestamp = System.currentTimeMillis();
     }
 
-    public DetailLogPoint getLogPoint() {
+    public LogPoint getLogPoint() {
         return logPoint;
     }
 }

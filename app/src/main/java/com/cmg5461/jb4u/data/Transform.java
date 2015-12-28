@@ -41,8 +41,8 @@ public class Transform {
         return (int) n;
     }
 
-    public static double bytes2Egt(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2Egt(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static int bytes2Gear(byte[] bytes) {
@@ -61,12 +61,12 @@ public class Transform {
         return convertByteArrayToInt(bytes);
     }
 
-    public static double bytes2OilTemp(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2OilTemp(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
-    public static double bytes2WaterTemp(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2WaterTemp(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static int bytes2FFPid(byte[] bytes) {
@@ -130,8 +130,8 @@ public class Transform {
         return convertByteArrayToDouble(bytes) / num2;
     }
 
-    public static double bytes2M1LeanCruise(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2M1LeanCruise(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static double bytes2TractionAssist(byte[] bytes, double num2) {
@@ -199,8 +199,8 @@ public class Transform {
         return convertByteArrayToDouble(bytes);
     }
 
-    public static double bytes2FpsSafety(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2FpsSafety(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static double bytes2CpsOffset(byte[] bytes) {

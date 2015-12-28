@@ -21,7 +21,7 @@ import android.widget.TextView;
 
 import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
-import com.cmg5461.jb4u.log.DetailLogPoint;
+import com.cmg5461.jb4u.log.LogPoint;
 import com.cmg5461.jb4u.log.JB4SettingPoint;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
 
@@ -36,7 +36,7 @@ public class JB4UActivity extends Activity {
     private JB4ConnectionService myService;
     public ServiceConnection myConnection;
 
-    private DetailLogPoint displayDLPoint = new DetailLogPoint();
+    private LogPoint displayDLPoint = new LogPoint();
     private JB4SettingPoint displaySettingPoint = new JB4SettingPoint();
     //private TextView console;
     private ImageButton connectButton;
@@ -291,11 +291,11 @@ public class JB4UActivity extends Activity {
     private void updateUI() {
         if (connected) {
             //sbFormat.format("%15.2f Psi", myService.getPoint().boost);
-            DetailLogPoint lp = myService.getPoint();
+            LogPoint lp = myService.getPoint();
 
             if (lp.rpm != displayDLPoint.rpm) {
                 displayDLPoint.rpm = lp.rpm;
-                rpm.setText(String.format("%5s RPM", lp.rpm));
+                rpm.setText(String.format("%5d RPM", lp.rpm));
                 //rpm_gauge.setTargetValue(lp.rpm);
             }
 
@@ -326,7 +326,7 @@ public class JB4UActivity extends Activity {
 
             if (lp.trims != displayDLPoint.trims) {
                 displayDLPoint.trims = lp.trims;
-                trims.setText(String.format("%3s", lp.trims));
+                trims.setText(String.format("%3d", lp.trims));
             }
 
             if (lp.fp_l != displayDLPoint.fp_l) {
@@ -371,12 +371,12 @@ public class JB4UActivity extends Activity {
 
             if (lp.waterTemp != displayDLPoint.waterTemp) {
                 displayDLPoint.waterTemp = lp.waterTemp;
-                waterTemp.setText(String.format("%4.1f", lp.waterTemp));
+                waterTemp.setText(String.format("%4d", lp.waterTemp));
             }
 
             if (lp.oilTemp != displayDLPoint.oilTemp) {
                 displayDLPoint.oilTemp = lp.oilTemp;
-                oilTemp.setText(String.format("%4.1f", lp.oilTemp));
+                oilTemp.setText(String.format("%4d", lp.oilTemp));
             }
 
             // settings
@@ -384,12 +384,12 @@ public class JB4UActivity extends Activity {
             JB4SettingPoint sp = myService.getSettingPoint();
             if (lp.ff != displayDLPoint.ff) {
                 displaySettingPoint.FF = sp.FF;
-                ff.setText(String.format("%4s", sp.FF));
+                ff.setText(String.format("%4d", sp.FF));
             }
 
             if (sp.fuel_ol != displaySettingPoint.fuel_ol) {
                 displaySettingPoint.fuel_ol = sp.fuel_ol;
-                fol.setText(String.format("%4s", sp.fuel_ol));
+                fol.setText(String.format("%4d", sp.fuel_ol));
             }
 
             if (lp.avg_ign != displayDLPoint.avg_ign) {
@@ -399,12 +399,12 @@ public class JB4UActivity extends Activity {
 
             if (lp.map != displayDLPoint.map) {
                 displayDLPoint.map = lp.map;
-                map.setText(String.format("%2s", lp.map));
+                map.setText(String.format("%2d", lp.map));
             }
 
             if (logIndex != myService.getLogIndex()) {
                 logIndex = myService.getLogIndex();
-                logLen.setText(String.format("%5s/5000", logIndex));
+                logLen.setText(String.format("%5d/5000", logIndex));
             }
         }
     }
