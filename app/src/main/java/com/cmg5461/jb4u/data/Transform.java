@@ -158,8 +158,8 @@ public class Transform {
         return convertByteArrayToDouble(bytes);
     }
 
-    public static double bytes2FuelPressure(byte[] bytes) {
-        return convertByteArrayToDouble(bytes);
+    public static int bytes2FuelPressure(byte[] bytes) {
+        return convertByteArrayToInt(bytes);
     }
 
     public static String bytes2Firmware(byte[] bytes) {

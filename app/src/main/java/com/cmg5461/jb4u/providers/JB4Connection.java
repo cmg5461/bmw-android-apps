@@ -80,10 +80,8 @@ public class JB4Connection {
     // timers
     private final ScheduledExecutorService heartbeatScheduler;
     private final ScheduledExecutorService readScheduler;
-    private final ScheduledExecutorService testScheduler;
     private final Runnable heartbeatRunnable;
     private final Runnable readRunnable;
-    private final Runnable testRunnable;
     private ScheduledFuture heartbeatLoopFuture = null;
     private ScheduledFuture readLoopFuture = null;
     private ScheduledFuture testLoopFuture = null;
@@ -95,7 +93,6 @@ public class JB4Connection {
         mHandler = new Handler(Looper.getMainLooper());
         heartbeatScheduler = Executors.newScheduledThreadPool(1);
         readScheduler = Executors.newScheduledThreadPool(1);
-        testScheduler = Executors.newScheduledThreadPool(1);
         heartbeatRunnable = new Runnable() {
             @Override
             public void run() {
@@ -117,18 +114,6 @@ public class JB4Connection {
                     }
                 } catch (Throwable t) {
                     Log.e(Constants.TAG, "readRunnable ERROR", t);
-                }
-            }
-        };
-        testRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (logging) {
-                    logPoint.rpm++;
-                    logPoint.boost += 0.01;
-                    //long now = System.currentTimeMillis();
-                    //Log.d(Constants.TAG, (now - lastTime) + "ms elapsed");
-                    //lastTime = now;
                 }
             }
         };
@@ -154,8 +139,6 @@ public class JB4Connection {
         ftD2xx.setVIDPID(1027, 24577);
         int nDev = ftD2xx.createDeviceInfoList(ctx);
         if (nDev < 1) {
-            logging = true;
-            testLoopFuture = testScheduler.scheduleAtFixedRate(testRunnable, 0L, testInterval, TimeUnit.MILLISECONDS);
             Toast("No device found!");
             return;
         }
@@ -223,6 +206,14 @@ public class JB4Connection {
         }
         ftdev.close();
         ftdev = null;
+    }
+
+    public void logSplit() {
+        if (storedPointIdx > 0) {
+            Toast("Splitting log");
+            saveCsvFile(storedPointIdx);
+            storedPointIdx = 0;
+        }
     }
 
     public void sendBytes(JB4Command cmd) {
@@ -308,7 +299,7 @@ public class JB4Connection {
             //Constants.LogD("DATA RX: " + Arrays.toString(rx));
             buffer.AddBytes(rx);
             buffer.ParseBuffer();
-            if (System.currentTimeMillis() - lastLogPoint.timestamp > 99 || logPoint.rpm < 1 || logPoint.rpm != lastLogPoint.rpm || logPoint.boost != lastLogPoint.boost) {
+            if ((System.currentTimeMillis() - lastLogPoint.timestamp > 99) && (logPoint.rpm < 1 || logPoint.rpm != lastLogPoint.rpm || logPoint.boost != lastLogPoint.boost)) {
                 LogPoint.Copy(logPoint, lastLogPoint);
                 buffer.updateTimestamp();
                 LogPoint.Copy(logPoint, storedPoints[storedPointIdx++]);
@@ -357,27 +348,15 @@ public class JB4Connection {
                 File folder = new File(Environment.getExternalStorageDirectory() + "/Logs");
                 boolean var;
                 if (!folder.exists()) var = folder.mkdir();
-                String filename = folder.toString() + "/JB4U_LOG_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
-                String jb4logName = folder.toString() + "/JB4U_JB4Interface_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                //String filename = folder.toString() + "/JB4U_DETAIL_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                String jb4logName = folder.toString() + "/JB4U_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
 
                 try {
+                    Toast("Saving...");
                     FileOutputStream fos = new FileOutputStream(jb4logName);
                     fos.write(JB4SettingPoint.getJB4Header(settings).getBytes());
                     for (int i = 0; i < rows; i++)
                         fos.write(LogPoint.getJB4LogPointData(tempPoints[i], startTime).getBytes());
-                    fos.flush();
-                    fos.close();
-                    Toast("JB4 save successful.");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast("JB4 save unsuccessful.");
-                }
-
-                try {
-                    FileOutputStream fos = new FileOutputStream(filename);
-                    fos.write(LogPoint.getCsvHeader().getBytes());
-                    for (int i = 0; i < rows; i++)
-                        fos.write(LogPoint.getCsvString(tempPoints[i]).getBytes());
                     fos.flush();
                     fos.close();
                     Toast("Save successful.");
@@ -385,6 +364,19 @@ public class JB4Connection {
                     e.printStackTrace();
                     Toast("Save unsuccessful.");
                 }
+
+                /*try {
+                    FileOutputStream fos = new FileOutputStream(filename);
+                    fos.write(LogPoint.getCsvHeader().getBytes());
+                    for (int i = 0; i < rows; i++)
+                        fos.write(LogPoint.getCsvString(tempPoints[i], startTime).getBytes());
+                    fos.flush();
+                    fos.close();
+                    Toast("Save successful.");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast("Save unsuccessful.");
+                }*/
             }
         }).start();
     }

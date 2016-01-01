@@ -55,6 +55,16 @@ public class JB4ConnectionService extends Service {
         });
     }
 
+    public void logSplit() {
+        Log.d(Constants.TAG, "jb4 log split");
+        exs.submit(new Runnable() {
+            @Override
+            public void run() {
+                jb4Connection.logSplit();
+            }
+        });
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(Constants.TAG, "service start command received");
@@ -71,6 +81,10 @@ public class JB4ConnectionService extends Service {
         public JB4ConnectionService getService() {
             return JB4ConnectionService.this;
         }
+    }
+
+    public boolean isConnected() {
+        return jb4Connection.isLogging();
     }
 
     public LogPoint getPoint() {

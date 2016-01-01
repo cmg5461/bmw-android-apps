@@ -203,7 +203,9 @@ public class JB4SettingPoint {
         sb.append("ign_3,");
         sb.append("ign_4,");
         sb.append("ign_5,");
-        sb.append("ign_6\r\n"); // jb4 log
+        sb.append("ign_6,"); // jb4 log
+        sb.append("H2O_Temp,");
+        sb.append("Oil_Temp\r\n");
         return sb.toString();
     }
 

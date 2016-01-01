@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -16,14 +17,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.cmg5461.jb4u.R;
 import com.cmg5461.jb4u.data.Constants;
-import com.cmg5461.jb4u.log.LogPoint;
 import com.cmg5461.jb4u.log.JB4SettingPoint;
+import com.cmg5461.jb4u.log.LogPoint;
 import com.cmg5461.jb4u.service.JB4ConnectionService;
+import com.cmg5461.jb4u.ui.views.GraphView;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,6 +43,7 @@ public class JB4UActivity extends Activity {
     private JB4SettingPoint displaySettingPoint = new JB4SettingPoint();
     //private TextView console;
     private ImageButton connectButton;
+    private Button btnLogSplit;
     private TextView rpm;
     private TextView boost;
     private TextView target;
@@ -64,12 +68,9 @@ public class JB4UActivity extends Activity {
     private TextView map;
     private TextView logLen;
 
+    private GraphView graph_ign;
+
     //private ScrollView scrollView;
-
-    private StringBuilder consoleText;
-    private int consoleLines = 0;
-
-    private boolean connected = false;
 
     private final ScheduledExecutorService updateScheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture updateFuture;
@@ -99,6 +100,7 @@ public class JB4UActivity extends Activity {
             }
         }
     };
+    private boolean buttonConnected = false;
 
     @Override
     protected void onDestroy() {
@@ -147,7 +149,8 @@ public class JB4UActivity extends Activity {
     protected void onStart() {
         Log.d(Constants.TAG, "ACTIVITY onStart");
         doBindService();
-        if (connected && updateFuture != null && updateFuture.isCancelled()) startUpdater();
+        if (myService != null && myService.isConnected() && updateFuture != null && updateFuture.isCancelled())
+            startUpdater();
         super.onStart();
     }
 
@@ -189,39 +192,48 @@ public class JB4UActivity extends Activity {
         map = (TextView) findViewById(R.id.textMap);
         logLen = (TextView) findViewById(R.id.textLogLen);
 
-        //scrollView = (ScrollView) findViewById(R.id.scrollView);
-        //console = (TextView) findViewById(R.id.console);
-        consoleText = new StringBuilder("init");
-        //console.setText(consoleText.toString());
-        //console.setEnabled(false);
-        //console.setTextColor(Color.BLACK);
-        consoleLines++;
+        graph_ign = (GraphView) findViewById(R.id.graph_ign);
+        graph_ign.mign1.name = "IGN 1";
+        graph_ign.mign1.paint.setColor(Color.GREEN);
+        graph_ign.mign2.name = "IGN 2";
+        graph_ign.mign2.paint.setColor(Color.RED);
+        graph_ign.mign3.name = "IGN 3";
+        graph_ign.mign3.paint.setColor(Color.BLUE);
+        graph_ign.mign4.name = "IGN 4";
+        graph_ign.mign4.paint.setColor(Color.YELLOW);
+        graph_ign.mign5.name = "IGN 5";
+        graph_ign.mign5.paint.setColor(Color.MAGENTA);
+        graph_ign.mign6.name = "IGN 6";
+        graph_ign.mign6.paint.setColor(Color.CYAN);
 
         connectButton = (ImageButton) findViewById(R.id.imageButton_toggleConnect);
-        connectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AddConsoleLine("service start click");
-                if (!connected) {
-                    if (myService != null) {
-                        connected = true;
-                        myService.connect();
-                        startUpdater();
-                        connectButton.setBackgroundResource(R.drawable.disconnect);
-                        AddConsoleLine("service started");
-                    }
-                } else {
-                    if (myService != null) {
-                        connected = false;
-                        myService.disconnect();
-                        stopUpdater();
-                        connectButton.setBackgroundResource(R.drawable.connect);
-                        AddConsoleLine("service stahpped");
+        connectButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (myService == null) return;
+                        if (!myService.isConnected()) {
+                            myService.connect();
+                            startUpdater();
+                        } else {
+                            myService.disconnect();
+                            stopUpdater();
+                            connectButton.setBackgroundResource(R.drawable.connect);
+                        }
                     }
                 }
-            }
-        });
-        AddConsoleLine("init finished");
+        );
+
+        btnLogSplit = (Button) findViewById(R.id.logSplit);
+        btnLogSplit.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (myService == null || !myService.isConnected()) return;
+                        myService.logSplit();
+                    }
+                }
+        );
     }
 
     public void stopUpdater() {
@@ -249,29 +261,6 @@ public class JB4UActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void AddConsoleLine(String text) {
-        consoleText.append('\n');
-        consoleText.append(text);
-        consoleLines++;
-
-        if (consoleLines > 50) {
-            consoleText.replace(0, consoleText.indexOf("\n") + 1, "");
-            consoleLines--;
-        }
-        Log.d(Constants.TAG, "Console: " + text);
-        //console.setText(consoleText.toString());
-
-        //scrollView = (ScrollView) findViewById(R.id.scrollView);
-        //if (scrollView != null) {
-        //    scrollView.postDelayed(new Runnable() {
-        //        @Override
-        //        public void run() {
-        //            scrollView.fullScroll(View.FOCUS_DOWN);
-        //        }
-        //    }, 25);
-        //}
-    }
-
     @Override
     protected void onResume() {
         Log.d(Constants.TAG, "ACTIVITY onResume");
@@ -289,7 +278,16 @@ public class JB4UActivity extends Activity {
     }
 
     private void updateUI() {
-        if (connected) {
+        if (myService == null) return;
+        if (myService.isConnected() && !buttonConnected) {
+            connectButton.setBackgroundResource(R.drawable.disconnect);
+            buttonConnected = true;
+        } else if (!myService.isConnected() && buttonConnected) {
+            connectButton.setBackgroundResource(R.drawable.connect);
+            buttonConnected = false;
+        }
+        long now = System.currentTimeMillis();
+        if (myService.isConnected()) {
             //sbFormat.format("%15.2f Psi", myService.getPoint().boost);
             LogPoint lp = myService.getPoint();
 
@@ -331,42 +329,54 @@ public class JB4UActivity extends Activity {
 
             if (lp.fp_l != displayDLPoint.fp_l) {
                 displayDLPoint.fp_l = lp.fp_l;
-                fp_l.setText(String.format("%3d PSI", (int) lp.fp_l));
+                fp_l.setText(String.format("%3d PSI", lp.fp_l));
             }
 
             if (lp.fp_h != displayDLPoint.fp_h) {
                 displayDLPoint.fp_h = lp.fp_h;
-                fp_h.setText(String.format("%3d", (int) lp.fp_h));
+                fp_h.setText(String.format("%3d", lp.fp_h));
             }
 
             if (lp.ign_1 != displayDLPoint.ign_1) {
                 displayDLPoint.ign_1 = lp.ign_1;
                 ign_1.setText(String.format("%4.1f", lp.ign_1));
+                graph_ign.mign1.addValue(now, (float) lp.ign_1);
+                graph_ign.mign1.purge(now - 10000);
             }
 
             if (lp.ign_2 != displayDLPoint.ign_2) {
                 displayDLPoint.ign_2 = lp.ign_2;
                 ign_2.setText(String.format("%4.1f", lp.ign_2));
+                graph_ign.mign2.addValue(now, (float) lp.ign_2);
+                graph_ign.mign2.purge(now - 10000);
             }
 
             if (lp.ign_3 != displayDLPoint.ign_3) {
                 displayDLPoint.ign_3 = lp.ign_3;
                 ign_3.setText(String.format("%4.1f", lp.ign_3));
+                graph_ign.mign3.addValue(now, (float) lp.ign_3);
+                graph_ign.mign3.purge(now - 10000);
             }
 
             if (lp.ign_4 != displayDLPoint.ign_4) {
                 displayDLPoint.ign_4 = lp.ign_4;
                 ign_4.setText(String.format("%4.1f", lp.ign_4));
+                graph_ign.mign4.addValue(now, (float) lp.ign_4);
+                graph_ign.mign4.purge(now - 10000);
             }
 
             if (lp.ign_5 != displayDLPoint.ign_5) {
                 displayDLPoint.ign_5 = lp.ign_5;
                 ign_5.setText(String.format("%4.1f", lp.ign_5));
+                graph_ign.mign5.addValue(now, (float) lp.ign_5);
+                graph_ign.mign5.purge(now - 10000);
             }
 
             if (lp.ign_6 != displayDLPoint.ign_6) {
                 displayDLPoint.ign_6 = lp.ign_6;
                 ign_6.setText(String.format("%4.1f", lp.ign_6));
+                graph_ign.mign6.addValue(now, (float) lp.ign_6);
+                graph_ign.mign6.purge(now - 10000);
             }
 
             if (lp.waterTemp != displayDLPoint.waterTemp) {
@@ -406,6 +416,21 @@ public class JB4UActivity extends Activity {
                 logIndex = myService.getLogIndex();
                 logLen.setText(String.format("%5d/5000", logIndex));
             }
+            graph_ign.invalidate();
+        } else {
+            /*Random r = new Random();
+            graph_ign.mign1.addValue(System.currentTimeMillis(), r.nextFloat() * 10);
+            graph_ign.mign1.purge(now - 10000);
+            graph_ign.mign2.addValue(System.currentTimeMillis(), r.nextFloat() * 10);
+            graph_ign.mign2.purge(now - 10000);
+            graph_ign.mign3.addValue(System.currentTimeMillis(), r.nextFloat() * 10);
+            graph_ign.mign3.purge(now - 10000);
+            graph_ign.mign4.addValue(System.currentTimeMillis(), r.nextFloat() * 10);
+            graph_ign.mign4.purge(now - 10000);
+            graph_ign.mign5.addValue(System.currentTimeMillis(), r.nextFloat() * 10);
+            graph_ign.mign5.purge(now - 10000);
+            graph_ign.mign6.addValue(System.currentTimeMillis(), r.nextFloat() * 10);
+            graph_ign.mign6.purge(now - 10000);*/
         }
     }
 
@@ -441,7 +466,7 @@ public class JB4UActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (connected) moveTaskToBack(true);
+        if (myService != null && myService.isConnected()) moveTaskToBack(true);
         else {
             super.onBackPressed();
             mNM.cancel(notificationID);

@@ -27,7 +27,7 @@ public class LogPoint {
     public double N1Enabled;
     public double last_safety;
     public double N1MinGear;
-    public double fp_h;
+    public int fp_h;
     public double N1ShiftRed; // auto shift reduction
     public double load;
     public double CpsSafety;
@@ -74,7 +74,7 @@ public class LogPoint {
         avg_ign = 0.0D;
         dme_bt = 0.0D;
         target = 0.0D;
-        fp_h = 0.0D;
+        fp_h = -1;
         N1Enabled = 0.0D;
         N1MethFlow = 0.0D;
         N1MinRpm = 0.0D;
@@ -226,7 +226,9 @@ public class LogPoint {
         sb.append(lp.ign_3).append(",");
         sb.append(lp.ign_4).append(",");
         sb.append(lp.ign_5).append(",");
-        sb.append(lp.ign_6).append(",\r\n"); // jb4 log
+        sb.append(lp.ign_6).append(","); // jb4 log
+        sb.append(lp.waterTemp).append(",");
+        sb.append(lp.oilTemp).append(",\r\n");
         return sb.toString();
     }
 
@@ -262,7 +264,8 @@ public class LogPoint {
         sb.append("ign_4,");
         sb.append("ign_5,");
         sb.append("ign_6,"); // jb4 log
-
+        sb.append("WaterTemp,");
+        sb.append("OilTemp,");
         sb.append("N1Enabled,");
         sb.append("N1MethFlow,");
         sb.append("N1MinRpm,");
@@ -273,15 +276,13 @@ public class LogPoint {
         sb.append("N1MinGear,");
         sb.append("N1MaxGear,");
         sb.append("N1MinAfr,");
-        sb.append("N1MinAdv,");
-        sb.append("WaterTemp,");
-        sb.append("OilTemp\r\n");
+        sb.append("N1MinAdv,\r\n");
         return sb.toString();
     }
 
-    public static String getCsvString(LogPoint lp) {
+    public static String getCsvString(LogPoint lp, long startTime) {
         StringBuilder sb = new StringBuilder();
-        sb.append(lp.timestamp).append(",");
+        sb.append((lp.timestamp - startTime) / 100D).append(",");
         sb.append(lp.rpm).append(",");
         sb.append(lp.ecu_psi).append(",");
         sb.append(lp.target).append(",");
@@ -311,7 +312,8 @@ public class LogPoint {
         sb.append(lp.ign_4).append(",");
         sb.append(lp.ign_5).append(",");
         sb.append(lp.ign_6).append(","); // jb4 log
-
+        sb.append(lp.waterTemp).append(",");
+        sb.append(lp.oilTemp).append(",");
         sb.append(lp.N1Enabled).append(",");
         sb.append(lp.N1MethFlow).append(",");
         sb.append(lp.N1MinRpm).append(",");
@@ -322,9 +324,8 @@ public class LogPoint {
         sb.append(lp.N1MinGear).append(",");
         sb.append(lp.N1MaxGear).append(",");
         sb.append(lp.N1MinAfr).append(",");
-        sb.append(lp.N1MinAdv).append(",");
-        sb.append(lp.waterTemp).append(",");
-        sb.append(lp.oilTemp).append(",\r\n"); // others
+        sb.append(lp.N1MinAdv).append(",\r\n");
+
         return sb.toString();
     }
 }
