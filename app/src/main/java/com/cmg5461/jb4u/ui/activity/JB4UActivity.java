@@ -53,12 +53,6 @@ public class JB4UActivity extends Activity {
     private TextView trims;
     private TextView fp_l;
     private TextView fp_h;
-    private TextView ign_1;
-    private TextView ign_2;
-    private TextView ign_3;
-    private TextView ign_4;
-    private TextView ign_5;
-    private TextView ign_6;
     private TextView waterTemp;
     private TextView oilTemp;
 
@@ -69,6 +63,20 @@ public class JB4UActivity extends Activity {
     private TextView logLen;
 
     private GraphView graph_ign;
+    private GraphView.GraphSeries mign1;
+    private GraphView.GraphSeries mign2;
+    private GraphView.GraphSeries mign3;
+    private GraphView.GraphSeries mign4;
+    private GraphView.GraphSeries mign5;
+    private GraphView.GraphSeries mign6;
+
+    private GraphView graph_boost;
+    private GraphView.GraphSeries mafr1;
+    private GraphView.GraphSeries mafr2;
+
+    private GraphView.GraphSeries mboost;
+    private GraphView.GraphSeries mtarget;
+    private GraphView.GraphSeries mfph;
 
     //private ScrollView scrollView;
 
@@ -178,12 +186,6 @@ public class JB4UActivity extends Activity {
         trims = (TextView) findViewById(R.id.textTrims);
         fp_l = (TextView) findViewById(R.id.textFPL);
         fp_h = (TextView) findViewById(R.id.textFPH);
-        ign_1 = (TextView) findViewById(R.id.textIgn1);
-        ign_2 = (TextView) findViewById(R.id.textIgn2);
-        ign_3 = (TextView) findViewById(R.id.textIgn3);
-        ign_4 = (TextView) findViewById(R.id.textIgn4);
-        ign_5 = (TextView) findViewById(R.id.textIgn5);
-        ign_6 = (TextView) findViewById(R.id.textIgn6);
         waterTemp = (TextView) findViewById(R.id.textWaterTemp);
         oilTemp = (TextView) findViewById(R.id.textOilTemp);
         ff = (TextView) findViewById(R.id.textFF);
@@ -193,18 +195,77 @@ public class JB4UActivity extends Activity {
         logLen = (TextView) findViewById(R.id.textLogLen);
 
         graph_ign = (GraphView) findViewById(R.id.graph_ign);
-        graph_ign.mign1.name = "IGN 1";
-        graph_ign.mign1.paint.setColor(Color.GREEN);
-        graph_ign.mign2.name = "IGN 2";
-        graph_ign.mign2.paint.setColor(Color.RED);
-        graph_ign.mign3.name = "IGN 3";
-        graph_ign.mign3.paint.setColor(Color.BLUE);
-        graph_ign.mign4.name = "IGN 4";
-        graph_ign.mign4.paint.setColor(Color.YELLOW);
-        graph_ign.mign5.name = "IGN 5";
-        graph_ign.mign5.paint.setColor(Color.MAGENTA);
-        graph_ign.mign6.name = "IGN 6";
-        graph_ign.mign6.paint.setColor(Color.CYAN);
+        graph_ign.yMax = 25;
+        graph_ign.yMin = 0;
+        graph_ign.ySteps = 6;
+
+        mign1 = graph_ign.createSeries();
+        mign2 = graph_ign.createSeries();
+        mign3 = graph_ign.createSeries();
+        mign4 = graph_ign.createSeries();
+        mign5 = graph_ign.createSeries();
+        mign6 = graph_ign.createSeries();
+        mafr1 = graph_ign.createSeries();
+        mafr2 = graph_ign.createSeries();
+
+        mign1.name = "IGN1";
+        mign1.paint.setColor(Color.GREEN);
+        graph_ign.setSeriesStrokeWidthDp(mign1, 2);
+        mign2.name = "IGN2";
+        mign2.paint.setColor(Color.RED);
+        graph_ign.setSeriesStrokeWidthDp(mign2, 2);
+        mign3.name = "IGN3";
+        mign3.paint.setColor(Color.BLUE);
+        graph_ign.setSeriesStrokeWidthDp(mign3, 2);
+        mign4.name = "IGN4";
+        mign4.paint.setColor(Color.YELLOW);
+        graph_ign.setSeriesStrokeWidthDp(mign4, 2);
+        mign5.name = "IGN5";
+        mign5.paint.setColor(Color.MAGENTA);
+        graph_ign.setSeriesStrokeWidthDp(mign5, 2);
+        mign6.name = "IGN6";
+        mign6.paint.setColor(Color.CYAN);
+        graph_ign.setSeriesStrokeWidthDp(mign6, 2);
+
+        mafr1.name = "AFR1";
+        mafr1.paint.setColor(Color.YELLOW);
+        graph_ign.setSeriesStrokeWidthDp(mafr1, 2);
+        mafr2.name = "AFR2";
+        mafr2.paint.setColor(Color.GRAY);
+        graph_ign.setSeriesStrokeWidthDp(mafr2, 2);
+
+        graph_ign.series.add(mign1);
+        graph_ign.series.add(mign2);
+        graph_ign.series.add(mign3);
+        graph_ign.series.add(mign4);
+        graph_ign.series.add(mign5);
+        graph_ign.series.add(mign6);
+
+        graph_ign.series.add(mafr1);
+        graph_ign.series.add(mafr2);
+
+        graph_boost = (GraphView) findViewById(R.id.graph_afr);
+        graph_boost.yMax = 25;
+        graph_boost.yMin = 0;
+        graph_boost.ySteps = 6;
+
+        mboost = graph_boost.createSeries();
+        mtarget = graph_boost.createSeries();
+        mfph = graph_boost.createSeries();
+
+        mboost.name = "Boost";
+        mboost.paint.setColor(Color.BLUE);
+        graph_boost.setSeriesStrokeWidthDp(mboost, 2);
+        mtarget.name = "Target";
+        mtarget.paint.setColor(Color.argb(255, 255, 20, 147)); // pink
+        graph_boost.setSeriesStrokeWidthDp(mtarget, 2);
+        mfph.name = "Fp_h";
+        mfph.paint.setColor(Color.argb(255, 255, 0, 0)); // red
+        graph_boost.setSeriesStrokeWidthDp(mfph, 2);
+
+        graph_boost.series.add(mboost);
+        graph_boost.series.add(mtarget);
+        graph_boost.series.add(mfph);
 
         connectButton = (ImageButton) findViewById(R.id.imageButton_toggleConnect);
         connectButton.setOnClickListener(
@@ -287,39 +348,53 @@ public class JB4UActivity extends Activity {
             buttonConnected = false;
         }
         long now = System.currentTimeMillis();
+        boolean boostUpdate = false;
+        boolean ignUpdate = false;
         if (myService.isConnected()) {
             //sbFormat.format("%15.2f Psi", myService.getPoint().boost);
             LogPoint lp = myService.getPoint();
 
             if (lp.rpm != displayDLPoint.rpm) {
                 displayDLPoint.rpm = lp.rpm;
-                rpm.setText(String.format("%5d RPM", lp.rpm));
+                rpm.setText(String.format("%5d", lp.rpm));
                 //rpm_gauge.setTargetValue(lp.rpm);
             }
 
             if (lp.boost != displayDLPoint.boost) {
                 displayDLPoint.boost = lp.boost;
-                boost.setText(String.format("%5.1f PSI", lp.boost));
+                boost.setText(String.format("%5.1f", lp.boost));
+                mboost.addValue(now, (float) lp.boost);
+                mboost.purge(now - 10000);
+                boostUpdate = true;
             }
 
             if (lp.target != displayDLPoint.target) {
                 displayDLPoint.target = lp.target;
                 target.setText(String.format("%5.1f PSI", lp.target));
+                mtarget.addValue(now, (float) lp.target);
+                mtarget.purge(now - 10000);
+                boostUpdate = true;
             }
 
             if (lp.iat != displayDLPoint.iat) {
                 displayDLPoint.iat = lp.iat;
-                iat.setText(String.format("%4d \u2109", lp.iat));
+                iat.setText(String.format("%4d", lp.iat));
             }
 
             if (lp.afr != displayDLPoint.afr) {
                 displayDLPoint.afr = lp.afr;
                 afr.setText(String.format("%5.1f", lp.afr));
+                mafr1.addValue(now, (float) lp.afr);
+                mafr1.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.afr2 != displayDLPoint.afr2) {
                 displayDLPoint.afr2 = lp.afr2;
                 afr2.setText(String.format("%5.1f", lp.afr2));
+                mafr2.addValue(now, (float) lp.afr2);
+                mafr2.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.trims != displayDLPoint.trims) {
@@ -335,48 +410,51 @@ public class JB4UActivity extends Activity {
             if (lp.fp_h != displayDLPoint.fp_h) {
                 displayDLPoint.fp_h = lp.fp_h;
                 fp_h.setText(String.format("%3d", lp.fp_h));
+                mfph.addValue(now, (float) lp.fp_h);
+                mfph.purge(now - 10000);
+                boostUpdate = true;
             }
 
             if (lp.ign_1 != displayDLPoint.ign_1) {
                 displayDLPoint.ign_1 = lp.ign_1;
-                ign_1.setText(String.format("%4.1f", lp.ign_1));
-                graph_ign.mign1.addValue(now, (float) lp.ign_1);
-                graph_ign.mign1.purge(now - 10000);
+                mign1.addValue(now, (float) lp.ign_1);
+                mign1.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.ign_2 != displayDLPoint.ign_2) {
                 displayDLPoint.ign_2 = lp.ign_2;
-                ign_2.setText(String.format("%4.1f", lp.ign_2));
-                graph_ign.mign2.addValue(now, (float) lp.ign_2);
-                graph_ign.mign2.purge(now - 10000);
+                mign2.addValue(now, (float) lp.ign_2);
+                mign2.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.ign_3 != displayDLPoint.ign_3) {
                 displayDLPoint.ign_3 = lp.ign_3;
-                ign_3.setText(String.format("%4.1f", lp.ign_3));
-                graph_ign.mign3.addValue(now, (float) lp.ign_3);
-                graph_ign.mign3.purge(now - 10000);
+                mign3.addValue(now, (float) lp.ign_3);
+                mign3.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.ign_4 != displayDLPoint.ign_4) {
                 displayDLPoint.ign_4 = lp.ign_4;
-                ign_4.setText(String.format("%4.1f", lp.ign_4));
-                graph_ign.mign4.addValue(now, (float) lp.ign_4);
-                graph_ign.mign4.purge(now - 10000);
+                mign4.addValue(now, (float) lp.ign_4);
+                mign4.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.ign_5 != displayDLPoint.ign_5) {
                 displayDLPoint.ign_5 = lp.ign_5;
-                ign_5.setText(String.format("%4.1f", lp.ign_5));
-                graph_ign.mign5.addValue(now, (float) lp.ign_5);
-                graph_ign.mign5.purge(now - 10000);
+                mign5.addValue(now, (float) lp.ign_5);
+                mign5.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.ign_6 != displayDLPoint.ign_6) {
                 displayDLPoint.ign_6 = lp.ign_6;
-                ign_6.setText(String.format("%4.1f", lp.ign_6));
-                graph_ign.mign6.addValue(now, (float) lp.ign_6);
-                graph_ign.mign6.purge(now - 10000);
+                mign6.addValue(now, (float) lp.ign_6);
+                mign6.purge(now - 10000);
+                ignUpdate = true;
             }
 
             if (lp.waterTemp != displayDLPoint.waterTemp) {
@@ -416,7 +494,8 @@ public class JB4UActivity extends Activity {
                 logIndex = myService.getLogIndex();
                 logLen.setText(String.format("%5d/5000", logIndex));
             }
-            graph_ign.invalidate();
+            if (ignUpdate) graph_ign.invalidate();
+            if (boostUpdate) graph_boost.invalidate();
         } else {
             /*Random r = new Random();
             graph_ign.mign1.addValue(System.currentTimeMillis(), r.nextFloat() * 10);

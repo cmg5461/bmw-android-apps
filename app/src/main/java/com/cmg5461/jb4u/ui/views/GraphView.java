@@ -14,7 +14,6 @@ import android.util.TypedValue;
 import android.view.View;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public class GraphView extends View {
 
@@ -31,13 +30,14 @@ public class GraphView extends View {
     private final int mPlotAxisColor = 0xFFBFBFBF;
     private final int mPlotTextColor = 0xFFBFBFBF;
 
-    public GraphSeries mign1 = new GraphSeries();
-    public GraphSeries mign2 = new GraphSeries();
-    public GraphSeries mign3 = new GraphSeries();
-    public GraphSeries mign4 = new GraphSeries();
-    public GraphSeries mign5 = new GraphSeries();
-    public GraphSeries mign6 = new GraphSeries();
+    public ArrayList<GraphSeries> series = new ArrayList<>();
 
+    public float yMin = 0;
+    public float yMax = 10;
+    public int ySteps = 6;
+    public float xMin = -10;
+    public float xMax = 0;
+    public int xSteps = 11;
 
     public GraphView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
@@ -175,141 +175,53 @@ public class GraphView extends View {
         canvas.drawLine(x1Plot, y2Plot, x1Plot, y1Plot, mPlotAxisPaint);
         canvas.drawLine(x1Plot, y2Plot, x2Plot, y2Plot, mPlotAxisPaint);
 
-        float yMin = 0;
-        float yMax = 10;
-        float xMin = -10;
-        float xMax = 0;
-
-        int nMax = 11;
-        for (int i = 0; i < nMax; i++) {
-            float val = xMin + (xMax - xMin) * i / (nMax - 1);
-            float xval = x1Plot + (x2Plot - x1Plot) * i / (nMax - 1);
+        for (int i = 0; i < xSteps; i++) {
+            float val = xMin + (xMax - xMin) * i / (xSteps - 1);
+            float xval = x1Plot + (x2Plot - x1Plot) * i / (xSteps - 1);
             canvas.drawLine(xval, y2Plot, xval, y1Plot, mPlotAxisPaint);
             canvas.drawText(Math.round(val) + "", xval - getPxForDP(10), getHeight() - getPxForDP(5), mPlotTextPaint);
         }
 
-        nMax = 6;
-        for (int i = 0; i < nMax; i++) {
-            float val = yMax - (yMax - yMin) * i / (nMax - 1);
-            float yval = y1Plot + (y2Plot - y1Plot) * i / (nMax - 1);
+        for (int i = 0; i < ySteps; i++) {
+            float val = yMax - (yMax - yMin) * i / (ySteps - 1);
+            float yval = y1Plot + (y2Plot - y1Plot) * i / (ySteps - 1);
             canvas.drawLine(x1Plot, yval, x2Plot, yval, mPlotAxisPaint);
             canvas.drawText(Math.round(val) + "", getPxForDP(5), yval + getPxForDP(6), mPlotTextPaint);
         }
     }
 
     private void drawSeries(Canvas canvas) {
-
-
-        GraphPoint gpPrev = null;
-
         float x1Plot = getPxForDP(30);
         float y1Plot = getPxForDP(9);
         float x2Plot = getWidth() - getPxForDP(5);
         float y2Plot = getHeight() - getPxForDP(24);
 
-        float yMin = 0;
-        float yMax = 10;
-        float xMin = -10;
-        float xMax = 0;
-
         long now = System.currentTimeMillis();
         float dx = x2Plot - x1Plot;
         float dy = y2Plot - y1Plot;
-        if (mign1.dataList.size() > 0) {
-            for (int i = mign1.dataList.size() - 1; i > -1; i--) {
-                GraphPoint gp = mign1.dataList.get(i);
-                if (gpPrev != null) {
-                    if ((gpPrev.timestamp - now / 1000) >= xMin) {
-                        float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        canvas.drawLine(x1, y1, x2, y2, mign1.paint);
+
+        for (GraphSeries gs : series) {
+            GraphPoint gpPrev = null;
+            if (gs.dataList.size() > 0) {
+                for (int i = gs.dataList.size() - 1; i > -1; i--) {
+                    GraphPoint gp = gs.dataList.get(i);
+                    if (gpPrev != null) {
+                        if ((gpPrev.timestamp - now / 1000) >= xMin) {
+                            float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
+                            float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
+                            float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
+                            float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
+                            canvas.drawLine(x1, y1, x2, y2, gs.paint);
+                        }
                     }
+                    gpPrev = gp;
                 }
-                gpPrev = gp;
             }
         }
-        gpPrev = null;
-        if (mign2.dataList.size() > 0) {
-            for (int i = mign2.dataList.size() - 1; i > -1; i--) {
-                GraphPoint gp = mign2.dataList.get(i);
-                if (gpPrev != null) {
-                    if ((gpPrev.timestamp - now / 1000) >= xMin) {
-                        float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        canvas.drawLine(x1, y1, x2, y2, mign2.paint);
-                    }
-                }
-                gpPrev = gp;
-            }
-        }
-        gpPrev = null;
-        if (mign3.dataList.size() > 0) {
-            for (int i = mign3.dataList.size() - 1; i > -1; i--) {
-                GraphPoint gp = mign3.dataList.get(i);
-                if (gpPrev != null) {
-                    if ((gpPrev.timestamp - now / 1000) >= xMin) {
-                        float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        canvas.drawLine(x1, y1, x2, y2, mign3.paint);
-                    }
-                }
-                gpPrev = gp;
-            }
-        }
-        gpPrev = null;
-        if (mign4.dataList.size() > 0) {
-            for (int i = mign4.dataList.size() - 1; i > -1; i--) {
-                GraphPoint gp = mign4.dataList.get(i);
-                if (gpPrev != null) {
-                    if ((gpPrev.timestamp - now / 1000) >= xMin) {
-                        float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        canvas.drawLine(x1, y1, x2, y2, mign4.paint);
-                    }
-                }
-                gpPrev = gp;
-            }
-        }
-        gpPrev = null;
-        if (mign5.dataList.size() > 0) {
-            for (int i = mign5.dataList.size() - 1; i > -1; i--) {
-                GraphPoint gp = mign5.dataList.get(i);
-                if (gpPrev != null) {
-                    if ((gpPrev.timestamp - now / 1000) >= xMin) {
-                        float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        canvas.drawLine(x1, y1, x2, y2, mign5.paint);
-                    }
-                }
-                gpPrev = gp;
-            }
-        }
-        gpPrev = null;
-        if (mign6.dataList.size() > 0) {
-            for (int i = mign6.dataList.size() - 1; i > -1; i--) {
-                GraphPoint gp = mign6.dataList.get(i);
-                if (gpPrev != null) {
-                    if ((gpPrev.timestamp - now / 1000) >= xMin) {
-                        float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                        float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                        canvas.drawLine(x1, y1, x2, y2, mign6.paint);
-                    }
-                }
-                gpPrev = gp;
-            }
-        }
+    }
+
+    public void setSeriesStrokeWidthDp(GraphSeries gs, float dp) {
+        gs.paint.setStrokeWidth(getPxForDP(dp));
     }
 
     private float getPxForDP(float dp) {
@@ -317,17 +229,26 @@ public class GraphView extends View {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics());
     }
 
+    public GraphSeries createSeries() {
+        return new GraphSeries();
+    }
+
     public class GraphSeries {
         public Paint paint = new Paint();
         public String name = "";
+        public long lastChange = System.currentTimeMillis();
         public ArrayList<GraphPoint> dataList = new ArrayList<>();
 
         public void purge(long ts) {
-            Iterator it = dataList.iterator();
+            while (dataList.size() > 0 && dataList.get(0).timestamp < ts) {
+                dataList.remove(0);
+            }
+
+           /* Iterator it = dataList.iterator();
             while (it.hasNext()) {
                 GraphPoint gp = (GraphPoint) it.next();
                 if (gp.timestamp < ts) it.remove();
-            }
+            }*/
         }
 
         public void addValue(long ts, float value) {
