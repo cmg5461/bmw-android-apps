@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.log;
+package com.cmg5461.jbPro.log;
 
 /**
  * Created by Chris on 11/10/2015.
@@ -197,7 +197,7 @@ public class LogPoint {
 
     public static String getJB4LogPointData(LogPoint lp, long startTime) {
         StringBuilder sb = new StringBuilder();
-        sb.append((lp.timestamp - startTime) / 100D).append(",");
+        sb.append(Math.round((lp.timestamp - startTime) / 10D) / 10D).append(",");
         sb.append(lp.rpm).append(",");
         sb.append(lp.ecu_psi).append(",");
         sb.append(lp.target).append(",");
@@ -282,7 +282,7 @@ public class LogPoint {
 
     public static String getCsvString(LogPoint lp, long startTime) {
         StringBuilder sb = new StringBuilder();
-        sb.append((lp.timestamp - startTime) / 100D).append(",");
+        sb.append(Math.round((lp.timestamp - startTime) / 10D) / 10D).append(",");
         sb.append(lp.rpm).append(",");
         sb.append(lp.ecu_psi).append(",");
         sb.append(lp.target).append(",");

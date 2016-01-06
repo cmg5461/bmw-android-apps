@@ -241,14 +241,14 @@
             android:textAppearance="?android:attr/textAppearanceLarge" />
     </LinearLayout>
 
-    <com.cmg5461.jb4u.ui.views.GraphView
+    <com.cmg5461.jbPro.ui.views.GraphView
         android:id="@+id/graph_afr"
         android:layout_width="wrap_content"
         android:layout_height="125dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp" />
 
-    <com.cmg5461.jb4u.ui.views.GraphView
+    <com.cmg5461.jbPro.ui.views.GraphView
         android:id="@+id/graph_ign"
         android:layout_width="wrap_content"
         android:layout_height="125dp"

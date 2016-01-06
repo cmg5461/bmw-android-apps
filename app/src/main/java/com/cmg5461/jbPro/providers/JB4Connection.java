@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.providers;
+package com.cmg5461.jbPro.providers;
 
 import android.app.Service;
 import android.content.Context;
@@ -8,11 +8,11 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.cmg5461.jb4u.data.Constants;
-import com.cmg5461.jb4u.data.JB4Buffer;
-import com.cmg5461.jb4u.data.JB4Command;
-import com.cmg5461.jb4u.log.LogPoint;
-import com.cmg5461.jb4u.log.JB4SettingPoint;
+import com.cmg5461.jbPro.data.Constants;
+import com.cmg5461.jbPro.data.JB4Buffer;
+import com.cmg5461.jbPro.data.JB4Command;
+import com.cmg5461.jbPro.log.JB4SettingPoint;
+import com.cmg5461.jbPro.log.LogPoint;
 import com.ftdi.j2xx.D2xxManager;
 import com.ftdi.j2xx.FT_Device;
 
@@ -34,23 +34,6 @@ import java.util.concurrent.TimeUnit;
 public class JB4Connection {
 
     private static JB4Connection singleton = null;
-
-    public static JB4Connection getSingleton() {
-        if (singleton == null) {
-            singleton = new JB4Connection();
-        }
-        return singleton;
-    }
-
-    private Service mService;
-    private Context ctx;
-
-    private boolean logging = false;
-
-    // drives and drivers
-    private FT_Device ftdev;
-    public D2xxManager ftD2xx;
-
     // connection parameters
     private final int baudRate = 9600;
     private final byte dataBits = D2xxManager.FT_DATA_BITS_8;
@@ -58,15 +41,24 @@ public class JB4Connection {
     private final byte parity = D2xxManager.FT_PARITY_NONE;
     private final byte bitMode = D2xxManager.FT_BITMODE_RESET;
     private final byte flowControl = D2xxManager.FT_FLOW_NONE;
-
     // communication constants
     private final int readInterval = 25; // ms
     private final int heartbeatInterval = 1000; // ms
     private final int commandDelayInterval = 100; // ms
     private final int testInterval = 25;
+    // timers
+    private final ScheduledExecutorService heartbeatScheduler;
+    private final ScheduledExecutorService readScheduler;
+    private final Runnable heartbeatRunnable;
+    private final Runnable readRunnable;
+    public D2xxManager ftD2xx;
+    private Service mService;
 
     //private StringBuilder sb = new StringBuilder();
-
+    private Context ctx;
+    private boolean logging = false;
+    // drives and drivers
+    private FT_Device ftdev;
     // buffer vars
     private LogPoint logPoint = new LogPoint(true);
     private LogPoint lastLogPoint = new LogPoint(true);
@@ -76,17 +68,10 @@ public class JB4Connection {
     private LogPoint[] storedPoints = new LogPoint[maxPoints];
     private int storedPointIdx = 0;
     private byte[] rxBuffer = new byte[512];
-
-    // timers
-    private final ScheduledExecutorService heartbeatScheduler;
-    private final ScheduledExecutorService readScheduler;
-    private final Runnable heartbeatRunnable;
-    private final Runnable readRunnable;
     private ScheduledFuture heartbeatLoopFuture = null;
     private ScheduledFuture readLoopFuture = null;
     private ScheduledFuture testLoopFuture = null;
     private Handler mHandler = null;
-
     private Toast mToast = null;
 
     private JB4Connection() {
@@ -123,8 +108,15 @@ public class JB4Connection {
         for (int i = 0; i < maxPoints; i++) {
             storedPoints[i] = new LogPoint();
         }
-        settingPoint.jb4interface = "JB4U";
+        settingPoint.jb4interface = "jbPro";
         settingPoint.motor = "N54 E Series";
+    }
+
+    public static JB4Connection getSingleton() {
+        if (singleton == null) {
+            singleton = new JB4Connection();
+        }
+        return singleton;
     }
 
     public void Connect() {
@@ -348,8 +340,8 @@ public class JB4Connection {
                 File folder = new File(Environment.getExternalStorageDirectory() + "/Logs");
                 boolean var;
                 if (!folder.exists()) var = folder.mkdir();
-                //String filename = folder.toString() + "/JB4U_DETAIL_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
-                String jb4logName = folder.toString() + "/JB4U_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                //String filename = folder.toString() + "/jbPro_DETAIL_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
+                String jb4logName = folder.toString() + "/jbPro_" + new SimpleDateFormat("yyyy-MM-dd-HH_mm_ss", Locale.US).format(new Date()) + ".csv";
 
                 try {
                     Toast("Saving...");

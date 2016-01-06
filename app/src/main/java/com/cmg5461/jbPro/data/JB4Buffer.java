@@ -1,7 +1,7 @@
-package com.cmg5461.jb4u.data;
+package com.cmg5461.jbPro.data;
 
-import com.cmg5461.jb4u.log.LogPoint;
-import com.cmg5461.jb4u.log.JB4SettingPoint;
+import com.cmg5461.jbPro.log.JB4SettingPoint;
+import com.cmg5461.jbPro.log.LogPoint;
 
 /**
  * Created by Chris on 11/10/2015.

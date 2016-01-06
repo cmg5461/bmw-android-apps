@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.log;
+package com.cmg5461.jbPro.log;
 
 /**
  * Created by Chris on 11/16/2015.

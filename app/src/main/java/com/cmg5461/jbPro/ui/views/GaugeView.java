@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.ui.views;
+package com.cmg5461.jbPro.ui.views;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -26,7 +26,7 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.cmg5461.jb4u.R;
+import com.cmg5461.jbPro.R;
 
 public class GaugeView extends View {
 
@@ -171,6 +171,33 @@ public class GaugeView extends View {
 
     public GaugeView(final Context context) {
         this(context, null, 0);
+    }
+
+    // Workaround to fix missing text on Lollipop and above,
+    // and probably some rendering issues with Jelly Bean and above
+    // Modified from http://stackoverflow.com/a/14989037/746068
+    public static void drawTextOnCanvasWithMagnifier(Canvas canvas, String text, float x, float y, Paint paint) {
+        if (android.os.Build.VERSION.SDK_INT <= 15) {
+            //draw normally
+            canvas.drawText(text, x, y, paint);
+        } else {
+            //workaround
+            float originalStrokeWidth = paint.getStrokeWidth();
+            float originalTextSize = paint.getTextSize();
+            final float magnifier = 1000f;
+
+            canvas.save();
+            canvas.scale(1f / magnifier, 1f / magnifier);
+
+            paint.setTextSize(originalTextSize * magnifier);
+            paint.setStrokeWidth(originalStrokeWidth * magnifier);
+
+            canvas.drawText(text, x * magnifier, y * magnifier, paint);
+            canvas.restore();
+
+            paint.setTextSize(originalTextSize);
+            paint.setStrokeWidth(originalStrokeWidth);
+        }
     }
 
     private void readAttrs(final Context context, final AttributeSet attrs, final int defStyle) {
@@ -729,33 +756,6 @@ public class GaugeView extends View {
             canvas.rotate(mSubdivisionAngle, 0.5f, 0.5f);
         }
         canvas.restore();
-    }
-
-    // Workaround to fix missing text on Lollipop and above,
-    // and probably some rendering issues with Jelly Bean and above
-    // Modified from http://stackoverflow.com/a/14989037/746068
-    public static void drawTextOnCanvasWithMagnifier(Canvas canvas, String text, float x, float y, Paint paint) {
-        if (android.os.Build.VERSION.SDK_INT <= 15) {
-            //draw normally
-            canvas.drawText(text, x, y, paint);
-        } else {
-            //workaround
-            float originalStrokeWidth = paint.getStrokeWidth();
-            float originalTextSize = paint.getTextSize();
-            final float magnifier = 1000f;
-
-            canvas.save();
-            canvas.scale(1f / magnifier, 1f / magnifier);
-
-            paint.setTextSize(originalTextSize * magnifier);
-            paint.setStrokeWidth(originalStrokeWidth * magnifier);
-
-            canvas.drawText(text, x * magnifier, y * magnifier, paint);
-            canvas.restore();
-
-            paint.setTextSize(originalTextSize);
-            paint.setStrokeWidth(originalStrokeWidth);
-        }
     }
 
     private String valueString(final float value) {

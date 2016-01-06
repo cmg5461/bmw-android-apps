@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.data;
+package com.cmg5461.jbPro.data;
 
 /**
  * Created by Chris on 11/6/2015.

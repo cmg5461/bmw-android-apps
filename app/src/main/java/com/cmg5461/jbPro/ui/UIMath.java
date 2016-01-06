@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.ui;
+package com.cmg5461.jbPro.ui;
 
 /**
  * Created by Chris on 1/2/2016.

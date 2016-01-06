@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.data;
+package com.cmg5461.jbPro.data;
 
 /**
  * Created by Chris on 11/10/2015.
@@ -73,14 +73,14 @@ public enum JB4Data {
         this.b = b;
     }
 
-    public byte value() {
-        return b;
-    }
-
     public static JB4Data getJB4DataForCmd(byte b) {
         for (JB4Data data : values()) {
             if (data.value() == b) return data;
         }
         return null;
+    }
+
+    public byte value() {
+        return b;
     }
 }

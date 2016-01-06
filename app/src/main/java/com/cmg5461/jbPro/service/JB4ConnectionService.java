@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.service;
+package com.cmg5461.jbPro.service;
 
 import android.app.Service;
 import android.content.Intent;
@@ -6,19 +6,18 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.cmg5461.jb4u.data.Constants;
-import com.cmg5461.jb4u.log.LogPoint;
-import com.cmg5461.jb4u.log.JB4SettingPoint;
-import com.cmg5461.jb4u.providers.JB4Connection;
+import com.cmg5461.jbPro.data.Constants;
+import com.cmg5461.jbPro.log.JB4SettingPoint;
+import com.cmg5461.jbPro.log.LogPoint;
+import com.cmg5461.jbPro.providers.JB4Connection;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class JB4ConnectionService extends Service {
-    private JB4Connection jb4Connection;
     private final IBinder mBinder = new MyBinder();
-
     private final ExecutorService exs = Executors.newFixedThreadPool(1);
+    private JB4Connection jb4Connection;
 
     @Override
     public void onCreate() {
@@ -77,12 +76,6 @@ public class JB4ConnectionService extends Service {
         return mBinder;
     }
 
-    public class MyBinder extends Binder {
-        public JB4ConnectionService getService() {
-            return JB4ConnectionService.this;
-        }
-    }
-
     public boolean isConnected() {
         return jb4Connection.isLogging();
     }
@@ -97,5 +90,11 @@ public class JB4ConnectionService extends Service {
 
     public int getLogIndex() {
         return jb4Connection.getLogIndex();
+    }
+
+    public class MyBinder extends Binder {
+        public JB4ConnectionService getService() {
+            return JB4ConnectionService.this;
+        }
     }
 }

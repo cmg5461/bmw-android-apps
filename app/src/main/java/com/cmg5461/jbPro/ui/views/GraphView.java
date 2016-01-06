@@ -1,4 +1,4 @@
-package com.cmg5461.jb4u.ui.views;
+package com.cmg5461.jbPro.ui.views;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -18,26 +18,23 @@ import java.util.ArrayList;
 public class GraphView extends View {
 
     public static final int SIZE = 300;
-
-    private Bitmap mBackground;
-    private Paint mBackgroundPaint;
-    private Paint mBorderPaint;
-    private Paint mPlotAxisPaint;
-    private Paint mPlotTextPaint;
-
     private final int mBackgroundColor = 0xFF000000;
     private final int mBorderColor = 0xFFAAAAAA;
     private final int mPlotAxisColor = 0xFFBFBFBF;
     private final int mPlotTextColor = 0xFFBFBFBF;
-
     public ArrayList<GraphSeries> series = new ArrayList<>();
-
     public float yMin = 0;
     public float yMax = 10;
     public int ySteps = 6;
     public float xMin = -10;
     public float xMax = 0;
     public int xSteps = 11;
+    public long xTime = 10000;
+    private Bitmap mBackground;
+    private Paint mBackgroundPaint;
+    private Paint mBorderPaint;
+    private Paint mPlotAxisPaint;
+    private Paint mPlotTextPaint;
 
     public GraphView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
@@ -200,21 +197,22 @@ public class GraphView extends View {
         float dx = x2Plot - x1Plot;
         float dy = y2Plot - y1Plot;
 
+        float dX = 1000F / (xMax - xMin) * dx;
+        float dY = (yMax - yMin) * dy;
+
         for (GraphSeries gs : series) {
-            GraphPoint gpPrev = null;
             if (gs.dataList.size() > 0) {
+                float x1 = 0;
+                float y1 = 0;
                 for (int i = gs.dataList.size() - 1; i > -1; i--) {
                     GraphPoint gp = gs.dataList.get(i);
-                    if (gpPrev != null) {
-                        if ((gpPrev.timestamp - now / 1000) >= xMin) {
-                            float x1 = x2Plot + (gpPrev.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                            float x2 = x2Plot + (gp.timestamp - now) / 1000F / (xMax - xMin) * dx;
-                            float y1 = Math.min(Math.max(yMax - gpPrev.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                            float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / (yMax - yMin) * dy + y1Plot;
-                            canvas.drawLine(x1, y1, x2, y2, gs.paint);
-                        }
+                    if ((gp.timestamp - now) / 1000 >= xMin) {
+                        float x2 = x2Plot + (gp.timestamp - now) / dX;
+                        float y2 = Math.min(Math.max(yMax - gp.value, yMin), yMax) / dY + y1Plot;
+                        if (x1 > 0 && y1 > 0) canvas.drawLine(x1, y1, x2, y2, gs.paint);
+                        x1 = x2;
+                        y1 = y2;
                     }
-                    gpPrev = gp;
                 }
             }
         }
@@ -257,12 +255,11 @@ public class GraphView extends View {
     }
 
     private class GraphPoint {
+        public long timestamp = 0L;
+        public float value = 0;
         public GraphPoint(long timestamp, float value) {
             this.timestamp = timestamp;
             this.value = value;
         }
-
-        public long timestamp = 0L;
-        public float value = 0;
     }
 }
